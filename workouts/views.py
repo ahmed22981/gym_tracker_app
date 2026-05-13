@@ -12,6 +12,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from datetime import timedelta
+from django.utils import timezone
+from django.db.models import Count
+
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
@@ -115,9 +119,9 @@ class GoogleLoginView(APIView):
         
 class RoutineTemplateListCreateView(generics.ListCreateAPIView):
     serializer_class = RoutineTemplateSerializer
-    pagination_class = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     
-    def get_query(self):
+    def get_queryset(self):
         return RoutineTemplate.objects.filter(user=self.request.user)
     
     def perform_create(self, serializer):
@@ -128,7 +132,7 @@ class RoutineTemplateDetailView(generics.RetrieveDestroyAPIView):
     serializer_class = RoutineTemplateSerializer
     permission_classes = [IsAuthenticated]
     
-    def get_query(self):
+    def get_queryset(self):
         return RoutineTemplate.objects.filter(user=self.request.user)        
     
 # Starts a session and pulls your previous weights/reps
@@ -186,3 +190,31 @@ class StartTemplateView(APIView):
         # Return the newly created session with all its populated logs to React
         serializer = WorkoutSessionSerializer(session)
         return Response(serializer.data, status=201)
+    
+# Analytics
+class MuscleHeatMapView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+        
+        logs = WorkoutLog.objects.filter(
+            session__user=request.user,
+            created_at__gte=thirty_days_ago
+        )
+        
+        muscle_counts = logs.values('exercise__target_muscle').annotate(set_count=Count('id'))
+        
+        heatmap_data = {}
+        for item in muscle_counts:
+            muscle_string = item['exercise__target_muscle'].lower()
+            count = item['set_count']
+            
+            for m in [x.strip() for x in muscle_string.split(',')]:
+                if m:
+                    heatmap_data[m] = heatmap_data.get(m, 0) + count
+        
+        return Response(heatmap_data)
+    
+
+        

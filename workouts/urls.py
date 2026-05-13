@@ -16,6 +16,8 @@ urlpatterns = [
     path('logs/<uuid:pk>/', views.WorkoutLogDetailView.as_view(), name='log-detail'),
     
     path('templates/', views.RoutineTemplateListCreateView.as_view(), name='template-list'),
-    path('templates/<uuid:pk>', views.RoutineTemplateDetailView.as_view(), name='template-detail'),
-    path('templates/<uuid:pk>/start', views.StartTemplateView.as_view(), name='template-start'),
+    path('templates/<uuid:pk>/', views.RoutineTemplateDetailView.as_view(), name='template-detail'),
+    path('templates/<uuid:pk>/start/', views.StartTemplateView.as_view(), name='template-start'),
+    
+    path('analytics/heatmap/', views.MuscleHeatMapView.as_view(), name='analytics-heatmap')
 ]

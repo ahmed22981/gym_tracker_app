@@ -124,3 +124,7 @@ export const deleteTemplate = (id: string) =>
 
 export const startTemplateSession = (id: string) =>
   api.post<WorkoutSession>(`/templates/${id}/start/`).then((r) => r.data);
+
+// Analytics
+export const getHeatmapData = () =>
+  api.get<Record<string, number>>("/analytics/heatmap/").then((r) => r.data);
