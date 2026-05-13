@@ -68,7 +68,6 @@ CSRF_TRUSTED_ORIGINS = [
     "https://gym-tracker-app-eight.vercel.app",
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = 'config.urls'
 
