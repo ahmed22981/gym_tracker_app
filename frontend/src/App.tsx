@@ -8,6 +8,7 @@ import SessionDetail from "./pages/SessionDetail";
 import NewSession from "./pages/NewSession";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import NewTemplate from "./pages/NewTemplate";
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
               <Route index element={<Exercises />} />
               <Route path="sessions" element={<Sessions />} />
               <Route path="sessions/new" element={<NewSession />} />
+              <Route path="templates/new" element={<NewTemplate />} /> 
               <Route path="sessions/:id" element={<SessionDetail />} />
             </Route>
           </Route>

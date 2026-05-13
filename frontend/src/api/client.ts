@@ -6,6 +6,8 @@ import type {
   CreateSessionPayload,
   CreateLogPayload,
   UpdateLogPayload,
+  RoutineTemplate,
+  CreateTemplatePayload,
 } from "../types";
 
 const api = axios.create({
@@ -21,6 +23,45 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// Response Interceptor (Refresh Token)
+api.interceptors.request.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+    // Grap the original request
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true; // Trying to prevent infinite loop
+      const refreshToken = localStorage.getItem("refresh_token");
+
+      if (refreshToken) {
+        try {
+          const response = await axios.post(
+            `${import.meta.env.VITE_API_URL}/token/refresh`,
+            {refresh: refreshToken},
+          );
+          const newAccessToken = response.data.access;
+          localStorage.setItem("access_storage", newAccessToken);
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          return api(originalRequest);
+        } catch (refreshError) {
+          console.warn("Refresh token expires, Logging out");
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
+          window.location.href = "/login";
+          return Promise.reject(refreshError);
+        }
+      } else {
+        localStorage.removeItem("access_token");
+        window.location.href = "/login";
+      }
+    }
+    return Promise.reject(error);
+  },
+);
 
 // Auth Endpoints
 export const login = (data: unknown) =>
@@ -67,3 +108,19 @@ export const updateLog = (id: string, data: UpdateLogPayload) =>
 
 export const deleteLog = (id: string) =>
   api.delete(`/logs/${id}/`).then((r) => r.data);
+
+// Templates
+export const getTemplates = () =>
+  api.get<RoutineTemplate[]>("/templates/").then((r) => r.data);
+
+export const getTemplate = (id: string) =>
+  api.get<RoutineTemplate>(`/templates/${id}/`).then((r) => r.data);
+
+export const createTemplate = (data: CreateTemplatePayload) =>
+  api.post<RoutineTemplate>("/templates/", data).then((r) => r.data);
+
+export const deleteTemplate = (id: string) =>
+  api.delete(`/templates/${id}/`).then((r) => r.data);
+
+export const startTemplateSession = (id: string) =>
+  api.post<WorkoutSession>(`/templates/${id}/start/`).then((r) => r.data);

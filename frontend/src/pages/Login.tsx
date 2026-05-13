@@ -26,8 +26,9 @@ export default function Login() {
     
     try {
       const data = await loginApi({ username: email, password });
+      // 1. UPDATE: Pass BOTH tokens here
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      login((data as any).access); 
+      login((data as any).access, (data as any).refresh); 
       navigate("/", {replace: true}); 
     } catch (err) {
       console.error(err);
@@ -42,8 +43,9 @@ export default function Login() {
     setError("");
     try {
       const data = await googleLoginApi(credentialResponse.credential);
+      // 2. UPDATE: Pass BOTH tokens here too
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      login((data as any).access); 
+      login((data as any).access, (data as any).refresh); 
       navigate("/", {replace: true}); 
     } catch (err) {
       console.error(err);

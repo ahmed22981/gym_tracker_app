@@ -13,5 +13,9 @@ urlpatterns = [
     path('sessions/<uuid:pk>/', views.WorkoutSessionDetailView.as_view(), name='session-detail'),
 
     path('logs/', views.WorkoutLogListCreateView.as_view(), name='log-list'),
-    path('logs/<uuid:pk>/', views.WorkoutLogDetailView.as_view(), name='log-detail'),  # NEW
+    path('logs/<uuid:pk>/', views.WorkoutLogDetailView.as_view(), name='log-detail'),
+    
+    path('templates/', views.RoutineTemplateListCreateView.as_view(), name='template-list'),
+    path('templates/<uuid:pk>', views.RoutineTemplateDetailView.as_view(), name='template-detail'),
+    path('templates/<uuid:pk>/start', views.StartTemplateView.as_view(), name='template-start'),
 ]

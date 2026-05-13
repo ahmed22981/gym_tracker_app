@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import Exercise, WorkoutSessison, WorkoutLog
+from .models import Exercise, RoutineItem, RoutineTemplate, WorkoutSessison, WorkoutLog
 from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -71,3 +71,38 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['first_name'] = user.first_name
         
         return token
+    
+    
+# NEW: Template Serializers
+class RoutineItemSerializer(serializers.ModelSerializer):
+    exercise_name = serializers.ReadOnlyField(source='exercise.name')
+
+    class Meta:
+        model = RoutineItem
+        fields = ('id', 'template', 'exercise', 'exercise_name', 'order')
+
+class RoutineTemplateSerializer(serializers.ModelSerializer):
+    items = RoutineItemSerializer(many=True, read_only=True)
+    # Write-only field to accept a list of exercise UUIDs from React
+    exercise_ids = serializers.ListField(
+        child=serializers.UUIDField(), write_only=True, required=False
+    )
+
+    class Meta:
+        model = RoutineTemplate
+        fields = ('id', 'name', 'items', 'exercise_ids', 'created_at')
+
+    def create(self, validated_data):
+        # Extract the array of exercise IDs
+        exercise_ids = validated_data.pop('exercise_ids', [])
+        # Create the template itself
+        template = RoutineTemplate.objects.create(**validated_data)
+        
+        # Link the exercises to the template while keeping the order
+        for index, ex_id in enumerate(exercise_ids):
+            RoutineItem.objects.create(
+                template=template,
+                exercise_id=ex_id,
+                order=index
+            )
+        return template

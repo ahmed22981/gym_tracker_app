@@ -1,10 +1,10 @@
-
 import { createContext, useContext, useState, type ReactNode } from "react";
 
 interface AuthContextType {
   token: string | null;
   userName: string | null;
-  login: (token: string) => void;
+  // 1. UPDATE: Accept a second optional parameter for the refresh token
+  login: (accessToken: string, refreshToken?: string) => void;
   logout: () => void;
 }
 
@@ -41,16 +41,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const [userName, setUserName] = useState<string | null>(getInitialName());
 
-  const login = (newToken: string) => {
-    localStorage.setItem("access_token", newToken);
-    setToken(newToken);
+  // 2. UPDATE: Save BOTH tokens to localStorage
+  const login = (accessToken: string, refreshToken?: string) => {
+    localStorage.setItem("access_token", accessToken);
+    if (refreshToken) {
+      localStorage.setItem("refresh_token", refreshToken);
+    }
+    setToken(accessToken);
     
-    const decoded = decodeJWT(newToken);
+    const decoded = decodeJWT(accessToken);
     setUserName(decoded?.first_name || "Athlete");
   };
 
+  // 3. UPDATE: Delete BOTH tokens on logout
   const logout = () => {
     localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
     setToken(null);
     setUserName(null);
   };

@@ -75,8 +75,11 @@ export default function Register() {
     setError("");
     try {
       const data = await googleLoginApi(credentialResponse.credential);
+      
+      // UPDATE: Pass both the access AND refresh tokens
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      login((data as any).access); 
+      login((data as any).access, (data as any).refresh); 
+      
       // Redirect directly to dashboard on successful Google registration/login
       navigate("/", { replace: true }); 
     } catch (err) {

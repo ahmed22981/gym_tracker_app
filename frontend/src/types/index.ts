@@ -41,3 +41,23 @@ export interface UpdateLogPayload {
   weight?: number;
   set_number?: number;
 }
+
+export interface RoutineItem {
+  id: string;
+  template: string;
+  exercise: string;
+  exercise_name: string;
+  order: number;
+}
+
+export interface RoutineTemplate {
+  id: string;
+  name: string;
+  items: RoutineItem[];
+  created_at: string;
+}
+
+export interface CreateTemplatePayload {
+  name: string;
+  exercise_ids: string[];
+}

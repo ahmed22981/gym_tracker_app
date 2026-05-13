@@ -1,11 +1,11 @@
 from rest_framework import generics
 from django.contrib.auth.models import User
 from rest_framework.permissions import AllowAny, IsAuthenticated 
-from .models import Exercise, WorkoutSessison, WorkoutLog
-from .serializers import ExerciseSerializer, RegisterSerializer, WorkoutLogSerializer, WorkoutSessionSerializer, CustomTokenObtainPairSerializer
+from .models import Exercise, WorkoutSessison, WorkoutLog, RoutineTemplate, RoutineItem
+from .serializers import ExerciseSerializer, RegisterSerializer, WorkoutLogSerializer, WorkoutSessionSerializer, CustomTokenObtainPairSerializer, RoutineTemplateSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-# NEW IMPORTS FOR GOOGLE AUTH
+ #GOOGLE AUTH
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from rest_framework.views import APIView
@@ -112,3 +112,77 @@ class GoogleLoginView(APIView):
             # THIS WILL PRINT THE EXACT GOOGLE ERROR IN YOUR DJANGO TERMINAL!
             print("GOOGLE TOKEN VERIFICATION FAILED:", str(e))
             return Response({'error': 'Invalid Google token', 'details': str(e)}, status=400)
+        
+class RoutineTemplateListCreateView(generics.ListCreateAPIView):
+    serializer_class = RoutineTemplateSerializer
+    pagination_class = [IsAuthenticated]
+    
+    def get_query(self):
+        return RoutineTemplate.objects.filter(user=self.request.user)
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+        
+
+class RoutineTemplateDetailView(generics.RetrieveDestroyAPIView):
+    serializer_class = RoutineTemplateSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_query(self):
+        return RoutineTemplate.objects.filter(user=self.request.user)        
+    
+# Starts a session and pulls your previous weights/reps
+class StartTemplateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            template = RoutineTemplate.objects.get(pk=pk, user=request.user)
+        except RoutineTemplate.DoesNotExist:
+            return Response({"error": "Template not found"}, status=404)
+
+        # 1. Create a brand new empty session using the Template's name
+        session = WorkoutSessison.objects.create(
+            user=request.user,
+            name=template.name
+        )
+
+        # 2. Loop through all exercises saved in this template
+        items = template.items.all().order_by('order')
+        
+        for item in items:
+            # 3. Find the most recent time the user performed this specific exercise
+            last_log = WorkoutLog.objects.filter(
+                session__user=request.user, 
+                exercise=item.exercise
+            ).order_by('-created_at').first()
+
+            if last_log:
+                # Get ALL the sets from that previous session
+                old_logs = WorkoutLog.objects.filter(
+                    session=last_log.session,
+                    exercise=item.exercise
+                ).order_by('set_number')
+                
+                # Clone them into the new session!
+                for old_log in old_logs:
+                    WorkoutLog.objects.create(
+                        session=session,
+                        exercise=item.exercise,
+                        set_number=old_log.set_number,
+                        reps=old_log.reps,     # Pre-fill previous reps
+                        weight=old_log.weight  # Pre-fill previous weight
+                    )
+            else:
+                # If they have NEVER done this exercise before, just create 1 empty set
+                WorkoutLog.objects.create(
+                    session=session,
+                    exercise=item.exercise,
+                    set_number=1,
+                    reps=0,
+                    weight=0.0
+                )
+
+        # Return the newly created session with all its populated logs to React
+        serializer = WorkoutSessionSerializer(session)
+        return Response(serializer.data, status=201)

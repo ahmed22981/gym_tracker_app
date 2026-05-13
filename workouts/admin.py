@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Exercise, WorkoutSessison, WorkoutLog
+from .models import Exercise, WorkoutSessison, WorkoutLog, RoutineItem, RoutineTemplate
 
 
 @admin.register(Exercise)
@@ -18,6 +18,16 @@ class WorkoutLogAdmin(admin.ModelAdmin):
     list_display = ('session', 'exercise', 'set_number', 'reps', 'weight')
     list_filter = ('session', 'exercise')
 
+@admin.register(RoutineTemplate)
+class RoutineTemplateAdmin(admin.ModelAdmin):
+    list_display = ('name', 'user', 'created_at')
+    
+@admin.register(RoutineItem)
+class RoutineItemAdmin(admin.ModelAdmin):
+    list_display = ('template', 'exercise', 'order')
+    
+    
+    
 
 
 # Register your models here.
