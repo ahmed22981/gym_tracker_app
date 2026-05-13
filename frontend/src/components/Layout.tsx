@@ -1,5 +1,6 @@
-import { NavLink, Outlet } from "react-router-dom";
-import { Dumbbell, CalendarDays, Plus, LayoutGrid } from "lucide-react";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { CalendarDays, Plus, LayoutGrid, LogOut, User as UserIcon } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 const navItems = [
   { to: "/", label: "Exercises", icon: LayoutGrid, end: true },
@@ -8,6 +9,14 @@ const navItems = [
 ];
 
 export default function Layout() {
+  const { logout, userName } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
   return (
     <div style={{ display: "flex", height: "100dvh", overflow: "hidden" }}>
       {/* Desktop Sidebar */}
@@ -16,7 +25,7 @@ export default function Layout() {
         background: "var(--surface)",
         borderRight: "1px solid var(--border)",
         flexDirection: "column",
-        padding: "28px 16px",
+        padding: "28px 16px 16px 16px",
         gap: 4,
       }}>
         <div style={{ marginBottom: 36, paddingLeft: 8 }}>
@@ -40,9 +49,35 @@ export default function Layout() {
         ))}
 
         <div style={{ flex: 1 }} />
-        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", color: "var(--text-muted)" }}>
-          <Dumbbell size={16} strokeWidth={1.5} />
-          <span style={{ fontSize: 13 }}>Stay consistent.</span>
+        
+        {/* User Info & Logout (Desktop) */}
+        <div style={{ 
+          display: "flex", flexDirection: "column", gap: 8, 
+          padding: "16px 8px 0 8px", 
+          borderTop: "1px solid var(--border)",
+          marginTop: 16
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--text)", fontSize: 14, fontWeight: 600, paddingLeft: 4 }}>
+            <UserIcon size={16} color="var(--accent)" />
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {userName || "Athlete"}
+            </span>
+          </div>
+          
+          <button
+            onClick={handleLogout}
+            style={{
+              display: "flex", alignItems: "center", gap: 10,
+              padding: "10px 12px", borderRadius: 8, border: "none",
+              background: "transparent", color: "var(--danger)",
+              fontSize: 14, fontWeight: 500, cursor: "pointer",
+              textAlign: "left", width: "100%", transition: "background 0.15s"
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,68,68,0.1)"}
+            onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+          >
+            <LogOut size={16} /> Log Out
+          </button>
         </div>
       </nav>
 
@@ -79,6 +114,21 @@ export default function Layout() {
             )}
           </NavLink>
         ))}
+        
+        {/* Logout (Mobile) */}
+        <button
+          onClick={handleLogout}
+          style={{
+            display: "flex", flexDirection: "column", alignItems: "center",
+            gap: 3, padding: "10px 0", flex: 1, border: "none",
+            background: "transparent", color: "var(--danger)",
+            cursor: "pointer",
+            transition: "color 0.15s"
+          }}
+        >
+          <LogOut size={21} strokeWidth={1.8} />
+          <span style={{ fontSize: 10, fontWeight: 400, letterSpacing: "0.03em" }}>Logout</span>
+        </button>
       </nav>
     </div>
   );

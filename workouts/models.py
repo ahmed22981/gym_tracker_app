@@ -1,9 +1,11 @@
 from django.db import models
+from django.contrib.auth.models import User
 import uuid
 
 
 class Exercise(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='exercises', null=True)
     name = models.CharField(max_length=100)
     target_muscle = models.CharField(max_length=1000)
     video_url = models.URLField(blank=True, null=True)
@@ -15,6 +17,7 @@ class Exercise(models.Model):
 
 class WorkoutSessison(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sessions', null=True)
     name = models.CharField(max_length=100)
     date = models.DateField(auto_now_add=True)
     

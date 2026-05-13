@@ -13,6 +13,25 @@ const api = axios.create({
   headers: {"Content-Type": "application/json"},
 });
 
+// Attach the token to every request
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("access_token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Auth Endpoints
+export const login = (data: unknown) =>
+  api.post("/token/", data).then((r) => r.data);
+
+export const register = (data: unknown) =>
+  api.post("/register/", data).then((r) => r.data);
+
+export const googleLogin = (token: string) =>
+  api.post("/google/", {token}).then((r) => r.data);
+
 // Exercises
 export const getExercises = () =>
   api.get<Exercise[]>("/exercises/").then((r) => r.data);

@@ -3,6 +3,9 @@ from . import views
 
 
 urlpatterns = [
+    path('register/', views.RegisterView.as_view(), name='register'),
+    path('google/', views.GoogleLoginView.as_view(), name='google_login'),
+    
     path('exercises/', views.ExerciseListCreateView.as_view(), name='exercise-list'),
     path('exercises/<uuid:pk>/', views.ExerciseDetailView.as_view(), name='exercise-detail'),
 
