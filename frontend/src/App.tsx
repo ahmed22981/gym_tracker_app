@@ -10,10 +10,12 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NewTemplate from "./pages/NewTemplate";
 import Analytics from "./pages/Analytics";
+import { TimerProvider } from "./context/TimerContext";
 
 export default function App() {
   return (
     <AuthProvider>
+      <TimerProvider>
       <BrowserRouter>
         <Routes>
           {/* Public Routes - Anyone can visit these */}
@@ -33,6 +35,7 @@ export default function App() {
           </Route>
         </Routes>
       </BrowserRouter>
+      </TimerProvider>
     </AuthProvider>
   );
 }

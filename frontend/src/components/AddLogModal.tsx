@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import type { Exercise, WorkoutLog } from "../types";
 import { getExercises, createLog } from "../api/client";
+import { useTimer } from "../context/TimerContext";
 
 interface Props {
   sessionId: string;
@@ -16,8 +17,12 @@ export default function AddLogModal({ sessionId, currentLogs, onAdded, onClose }
   const [reps, setReps] = useState("10");
   const [weight, setWeight] = useState("20");
   const [saving, setSaving] = useState(false);
+  
+  const { startTimer } = useTimer();
 
-  useEffect(() => { getExercises().then(setExercises); }, []);
+  useEffect(() => { 
+    getExercises().then(setExercises); 
+  }, []);
 
   useEffect(() => {
     if (!exerciseId) return;
@@ -40,11 +45,17 @@ export default function AddLogModal({ sessionId, currentLogs, onAdded, onClose }
     setSaving(true);
     try {
       const log = await createLog({
-        session: sessionId, exercise: exerciseId,
-        set_number: nextSet, reps: Number(reps), weight: Number(weight),
+        session: sessionId, 
+        exercise: exerciseId,
+        set_number: nextSet, 
+        reps: Number(reps), 
+        weight: Number(weight),
       });
       onAdded(log);
-    } finally { setSaving(false); }
+      startTimer(90);
+    } finally { 
+      setSaving(false); 
+    }
   }
 
   return (
@@ -65,7 +76,6 @@ export default function AddLogModal({ sessionId, currentLogs, onAdded, onClose }
         paddingBottom: "calc(24px + env(safe-area-inset-bottom))",
         position: "relative",
       }}>
-        {/* drag handle */}
         <div style={{
           width: 36, height: 4, borderRadius: 2,
           background: "var(--border)", margin: "0 auto 20px",

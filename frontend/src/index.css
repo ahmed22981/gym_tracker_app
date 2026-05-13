@@ -263,3 +263,15 @@ body,
     gap: 12px;
   }
 }
+.floating-timer {
+  bottom: 32px;
+  right: 32px;
+}
+@media (max-width: 768px) {
+  .floating-timer {
+    bottom: 85px;
+    right: 50%;
+    transform: translateX(50%);
+    width: max-content;
+  }
+}

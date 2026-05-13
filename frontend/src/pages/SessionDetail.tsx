@@ -43,7 +43,6 @@ export default function SessionDetail() {
 
   return (
     <div>
-      {/* Back */}
       <button onClick={() => navigate("/sessions")} style={{
         background: "none", border: "none", cursor: "pointer",
         color: "var(--text-muted)", display: "flex", alignItems: "center",
@@ -52,7 +51,6 @@ export default function SessionDetail() {
         <ArrowLeft size={14} /> Back
       </button>
 
-      {/* Header */}
       <div className="page-header">
         <div>
           <div className="font-display" style={{ fontSize: 36, lineHeight: 1 }}>
@@ -70,7 +68,6 @@ export default function SessionDetail() {
         </button>
       </div>
 
-      {/* Stats */}
       <div className="stats-grid">
         {[
           { label: "SETS", value: logs.length },
@@ -84,7 +81,6 @@ export default function SessionDetail() {
         ))}
       </div>
 
-      {/* Logs */}
       {logs.length === 0 ? (
         <div className="card" style={{
           padding: 48, textAlign: "center",
@@ -98,7 +94,6 @@ export default function SessionDetail() {
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {Object.entries(grouped).map(([exerciseName, exerciseLogs]) => (
             <div key={exerciseName} className="card" style={{ overflow: "hidden" }}>
-              {/* Exercise header */}
               <div style={{
                 padding: "12px 16px", borderBottom: "1px solid var(--border)",
                 display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
@@ -117,7 +112,6 @@ export default function SessionDetail() {
                 </div>
               </div>
 
-              {/* Column headers */}
               <div className="log-header-row" style={{ borderBottom: "1px solid var(--border)" }}>
                 {["SET", "EXERCISE", "REPS", "KG", ""].map((h, i) => (
                   <div key={i} style={{

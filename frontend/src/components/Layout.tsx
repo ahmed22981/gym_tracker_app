@@ -1,12 +1,13 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { CalendarDays, Plus, LayoutGrid, LogOut, User as UserIcon, Activity } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import FloatingTimer from "./FloatingTimer";
 
 const navItems = [
   { to: "/", label: "Exercises", icon: LayoutGrid, end: true },
   { to: "/sessions", label: "Sessions", icon: CalendarDays },
   { to: "/sessions/new", label: "New", icon: Plus },
-  {to: "/analytics", label: "Analytics", icon: Activity}
+  { to: "/analytics", label: "Analytics", icon: Activity }
 ];
 
 export default function Layout() {
@@ -20,7 +21,6 @@ export default function Layout() {
 
   return (
     <div style={{ display: "flex", height: "100dvh", overflow: "hidden" }}>
-      {/* Desktop Sidebar */}
       <nav className="desktop-sidebar" style={{
         width: 220, minWidth: 220,
         background: "var(--surface)",
@@ -51,7 +51,6 @@ export default function Layout() {
 
         <div style={{ flex: 1 }} />
         
-        {/* User Info & Logout (Desktop) */}
         <div style={{ 
           display: "flex", flexDirection: "column", gap: 8, 
           padding: "16px 8px 0 8px", 
@@ -82,12 +81,10 @@ export default function Layout() {
         </div>
       </nav>
 
-      {/* Main */}
       <main className="main-content">
         <Outlet />
       </main>
 
-      {/* Mobile Bottom Nav */}
       <nav className="mobile-bottom-nav">
         {navItems.map(({ to, label, icon: Icon, end }) => (
           <NavLink key={to} to={to} end={end} style={({ isActive }) => ({
@@ -116,7 +113,6 @@ export default function Layout() {
           </NavLink>
         ))}
         
-        {/* Logout (Mobile) */}
         <button
           onClick={handleLogout}
           style={{
@@ -131,6 +127,8 @@ export default function Layout() {
           <span style={{ fontSize: 10, fontWeight: 400, letterSpacing: "0.03em" }}>Logout</span>
         </button>
       </nav>
+
+      <FloatingTimer />
     </div>
   );
 }
