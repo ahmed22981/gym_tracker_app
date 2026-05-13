@@ -24,54 +24,47 @@ export default function ExerciseCard({ exercise, onDeleted }: Props) {
   const ytId = exercise.video_url ? getYouTubeId(exercise.video_url) : null;
   const thumbUrl = ytId ? `https://img.youtube.com/vi/${ytId}/mqdefault.jpg` : null;
 
-async function handleDelete(e: React.MouseEvent) {
-  // Prevent triggering click events on parent elements
-  e.stopPropagation();
+  async function handleDelete(e: React.MouseEvent) {
+    e.stopPropagation();
 
-  // 1. Show the confirmation dialog
-  const result = await Swal.fire({
-    title: "Are you sure?",
-    text: `You will not be able to restore "${exercise.name}" again!`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Yes, delete it!',
-    cancelButtonText: 'No, cancel!',
-  });
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: `You will not be able to restore "${exercise.name}" again!`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'No, cancel!',
+    });
 
-  // 2. If the user clicks "Yes, delete it!"
-  if (result.isConfirmed) {
-    setDeleting(true); // Start loading state from your original function
+    if (result.isConfirmed) {
+      setDeleting(true); 
 
-    try {
-      // Execute the delete operation
-      await deleteExercise(exercise.id);
-      onDeleted(exercise.id);
+      try {
+        await deleteExercise(exercise.id);
+        onDeleted(exercise.id);
 
-      // Show success message
-      Swal.fire({
-        title: 'Deleted!',
-        text: 'Exercise deleted successfully',
-        icon: 'success',
-        timer: 1000,
-        showConfirmButton: false // Hidden because of the timer
-      });
+        Swal.fire({
+          title: 'Deleted!',
+          text: 'Exercise deleted successfully',
+          icon: 'success',
+          timer: 1000,
+          showConfirmButton: false 
+        });
 
-    } catch {
-      // Revert loading state if it fails
-      setDeleting(false); 
+      } catch {
+        setDeleting(false); 
 
-      // Show error message
-      Swal.fire({
-        title: 'Excuse me',
-        text: 'An error occurred during deletion',
-        icon: 'error',
-        showConfirmButton: true
-      });
+        Swal.fire({
+          title: 'Excuse me',
+          text: 'An error occurred during deletion',
+          icon: 'error',
+          showConfirmButton: true
+        });
+      }
     }
   }
-}
 
   return (
     <div className="card" style={{ overflow: "hidden" }}>
@@ -96,6 +89,24 @@ async function handleDelete(e: React.MouseEvent) {
             </div>
           </a>
         </div>
+      ) : exercise.video_url ? (
+        <a href={exercise.video_url} target="_blank" rel="noopener noreferrer" style={{ display: "block", textDecoration: "none" }}>
+          <div style={{
+            width: "100%", aspectRatio: "16/9", background: "var(--surface-2)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "background 0.15s",
+          }}
+          onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255, 255, 255, 0.05)")}
+          onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "var(--surface-2)")}
+          >
+            <div style={{
+              width: 44, height: 44, borderRadius: "50%",
+              background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <Play size={18} fill="#0a0a0a" color="#0a0a0a" style={{ marginLeft: 2 }} />
+            </div>
+          </div>
+        </a>
       ) : (
         <div style={{
           width: "100%", aspectRatio: "16/9", background: "var(--surface-2)",
