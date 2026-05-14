@@ -1,4 +1,5 @@
 from rest_framework import generics
+from django.conf import settings
 from django.contrib.auth.models import User
 from rest_framework.permissions import AllowAny, IsAuthenticated 
 from .models import Exercise, WorkoutSessison, WorkoutLog, RoutineTemplate, RoutineItem
@@ -90,7 +91,8 @@ class GoogleLoginView(APIView):
             idinfo = id_token.verify_oauth2_token(
                 token, 
                 google_requests.Request(), 
-                "1095409291507-ngoouu6ff0n4iakv6qs506i3vd528rat.apps.googleusercontent.com" # <-- REPLACE THIS!
+                # "1095409291507-ngoouu6ff0n4iakv6qs506i3vd528rat.apps.googleusercontent.com"
+                client_id = settings.GOOGLE_CLIENT_ID
             )
 
             email = idinfo['email']
