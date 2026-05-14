@@ -89,9 +89,7 @@ export default function Login() {
             onSuccess={handleGoogleSuccess}
             onError={() => setError("Google login failed.")}
             theme="filled_black"
-            shape="circle"
-            use_fedcm_for_prompt
-            
+            shape="circle"            
           />
         </div>
 

@@ -143,7 +143,7 @@ export default function Register() {
             onSuccess={handleGoogleSuccess}
             onError={() => setError("Google login failed.")}
             theme="filled_black"
-            shape="rectangular"
+            shape="circle"
           />
         </div>
 
