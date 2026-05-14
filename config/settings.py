@@ -68,8 +68,7 @@ CORS_ALLOWED_ORIGINS = [
 #     "http://localhost:5173",
 #     "https://gym-tracker-app-eight.vercel.app",
 # ]
-CORS_ALLOWED_CREDENTIALS = True
-
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = 'config.urls'
 
