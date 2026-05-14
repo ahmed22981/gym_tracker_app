@@ -92,7 +92,7 @@ class GoogleLoginView(APIView):
                 token, 
                 google_requests.Request(), 
                 # "1095409291507-ngoouu6ff0n4iakv6qs506i3vd528rat.apps.googleusercontent.com"
-                client_id = settings.GOOGLE_CLIENT_ID
+                audience = settings.GOOGLE_CLIENT_ID
             )
 
             email = idinfo['email']
