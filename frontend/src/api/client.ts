@@ -25,28 +25,21 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   async (error) => {
     const originalRequest = error.config;
-
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       const refreshToken = localStorage.getItem("refresh_token");
-
       if (refreshToken) {
         try {
           const response = await axios.post(
             `${import.meta.env.VITE_API_URL}/token/refresh/`,
             {refresh: refreshToken},
           );
-
           const newAccessToken = response.data.access;
           localStorage.setItem("access_token", newAccessToken);
-
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-
           return api(originalRequest);
         } catch (refreshError) {
           console.warn("Refresh token expired, logging out");
@@ -64,7 +57,45 @@ api.interceptors.response.use(
   },
 );
 
-// Auth & GET Requests
+const QUEUE_KEY = "gym_offline_queue";
+
+const saveToOfflineQueue = (requestConfig: {
+  url: string;
+  method: string;
+  data: unknown;
+}) => {
+  const queue = JSON.parse(localStorage.getItem(QUEUE_KEY) || "[]");
+  queue.push(requestConfig);
+  localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+  console.log("Saved to offline queue!", requestConfig);
+};
+
+export const processOfflineQueue = async () => {
+  const queue = JSON.parse(localStorage.getItem(QUEUE_KEY) || "[]");
+  if (queue.length === 0) return;
+
+  console.log(`Syncing ${queue.length} offline requests to server...`);
+  localStorage.setItem(QUEUE_KEY, "[]");
+
+  for (const req of queue) {
+    try {
+      await api({url: req.url, method: req.method, data: req.data});
+      console.log(`Synced successfully: ${req.url}`);
+    } catch (error) {
+      console.error("Failed to sync queued request:", error);
+      saveToOfflineQueue(req);
+    }
+  }
+};
+
+window.addEventListener("online", () => {
+  console.log("Network is back! Processing queue...");
+  processOfflineQueue();
+});
+
+processOfflineQueue();
+
+// --- Auth & GET Requests ---
 export const login = (data: unknown) =>
   api.post("/token/", data).then((r) => r.data);
 export const register = (data: unknown) =>
@@ -105,21 +136,14 @@ export async function getExerciseProgress(
   return response.data;
 }
 
-// POST/PUT Requests (Offline Sync)
+// --- POST/PUT Requests (With Custom Offline Write capability) ---
 
 export const createExercise = async (data: FormData) => {
-  try {
-    const r = await api.post<Exercise>("/exercises/", data, {
-      headers: {"Content-Type": "multipart/form-data"},
-    });
-    return r.data;
-  } catch (error) {
-    if (!navigator.onLine) {
-      console.log("Offline: Exercise creation queued.");
-      return {id: `temp-ex-${Date.now()}`} as unknown as Exercise;
-    }
-    throw error;
-  }
+  if (!navigator.onLine) throw new Error("Cannot upload image while offline.");
+  const r = await api.post<Exercise>("/exercises/", data, {
+    headers: {"Content-Type": "multipart/form-data"},
+  });
+  return r.data;
 };
 
 export const createSession = async (data: CreateSessionPayload) => {
@@ -128,7 +152,7 @@ export const createSession = async (data: CreateSessionPayload) => {
     return r.data;
   } catch (error) {
     if (!navigator.onLine) {
-      console.log("Offline: Session creation queued.");
+      saveToOfflineQueue({url: "/sessions/", method: "POST", data});
       return {
         id: `temp-sess-${Date.now()}`,
         ...data,
@@ -144,7 +168,7 @@ export const createLog = async (data: CreateLogPayload) => {
     return r.data;
   } catch (error) {
     if (!navigator.onLine) {
-      console.log("Offline: Log creation queued.");
+      saveToOfflineQueue({url: "/logs/", method: "POST", data});
       return {id: `temp-log-${Date.now()}`, ...data} as unknown as WorkoutLog;
     }
     throw error;
@@ -157,7 +181,7 @@ export const updateLog = async (id: string, data: UpdateLogPayload) => {
     return r.data;
   } catch (error) {
     if (!navigator.onLine) {
-      console.log("Offline: Log update queued.");
+      saveToOfflineQueue({url: `/logs/${id}/`, method: "PATCH", data});
       return {id, ...data} as unknown as WorkoutLog;
     }
     throw error;
@@ -170,7 +194,7 @@ export const createTemplate = async (data: CreateTemplatePayload) => {
     return r.data;
   } catch (error) {
     if (!navigator.onLine) {
-      console.log("Offline: Template creation queued.");
+      saveToOfflineQueue({url: "/templates/", method: "POST", data});
       return {
         id: `temp-tpl-${Date.now()}`,
         ...data,
@@ -186,7 +210,11 @@ export const startTemplateSession = async (id: string) => {
     return r.data;
   } catch (error) {
     if (!navigator.onLine) {
-      console.log("Offline: Template session start queued.");
+      saveToOfflineQueue({
+        url: `/templates/${id}/start/`,
+        method: "POST",
+        data: {},
+      });
       return {id: `temp-tsess-${Date.now()}`} as unknown as WorkoutSession;
     }
     throw error;
