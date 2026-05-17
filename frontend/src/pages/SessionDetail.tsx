@@ -13,6 +13,7 @@ export default function SessionDetail() {
   const [logs, setLogs] = useState<WorkoutLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [preSelectedExercise, setPreSelectedExercise] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (!id) return;
@@ -21,6 +22,11 @@ export default function SessionDetail() {
       setLogs(s.logs.sort((a, b) => a.set_number - b.set_number));
     }).finally(() => setLoading(false));
   }, [id]);
+
+  const openModalWithExercise = (exId?: string) => {
+    setPreSelectedExercise(exId);
+    setShowModal(true);
+  };
 
   const grouped = logs.reduce<Record<string, WorkoutLog[]>>((acc, log) => {
     if (!acc[log.exercise_name]) acc[log.exercise_name] = [];
@@ -62,7 +68,7 @@ export default function SessionDetail() {
             })}
           </div>
         </div>
-        <button className="btn-primary" onClick={() => setShowModal(true)}
+        <button className="btn-primary" onClick={() => openModalWithExercise()}
           style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <Plus size={15} /> Log Set
         </button>
@@ -88,7 +94,7 @@ export default function SessionDetail() {
         }}>
           <Dumbbell size={36} color="var(--border)" />
           <div style={{ color: "var(--text-muted)" }}>No sets logged yet.</div>
-          <button className="btn-primary" onClick={() => setShowModal(true)}>Log your first set</button>
+          <button className="btn-primary" onClick={() => openModalWithExercise()}>Log your first set</button>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -104,11 +110,22 @@ export default function SessionDetail() {
                 }}>
                   {exerciseName}
                 </div>
-                <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                  <span className="tag">{exerciseLogs.length} sets</span>
-                  <span className="tag" style={{ color: "var(--accent)", borderColor: "var(--accent-dim)" }}>
-                    {exerciseLogs.reduce((s, l) => s + l.reps * l.weight, 0).toFixed(0)}kg
-                  </span>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <span className="tag">{exerciseLogs.length} sets</span>
+                    <span className="tag" style={{ color: "var(--accent)", borderColor: "var(--accent-dim)" }}>
+                      {exerciseLogs.reduce((s, l) => s + l.reps * l.weight, 0).toFixed(0)}kg
+                    </span>
+                  </div>
+                  <button 
+                    onClick={() => openModalWithExercise(exerciseLogs[0].exercise)}
+                    style={{
+                      background: "var(--accent)", border: "none", borderRadius: 4,
+                      width: 24, height: 24, display: "flex", alignItems: "center", 
+                      justifyContent: "center", cursor: "pointer", color: "#000"
+                    }}>
+                    <Plus size={14} strokeWidth={3} />
+                  </button>
                 </div>
               </div>
 
@@ -138,6 +155,7 @@ export default function SessionDetail() {
         <AddLogModal
           sessionId={session.id}
           currentLogs={logs}
+          initialExerciseId={preSelectedExercise}
           onAdded={(log) => { setLogs(prev => [...prev, log]); setShowModal(false); }}
           onClose={() => setShowModal(false)}
         />

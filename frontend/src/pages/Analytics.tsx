@@ -1,52 +1,89 @@
 import { useState, useEffect } from "react";
-import { getHeatmapData } from "../api/client";
+import { getHeatmapData, getExercises, getExerciseProgress } from "../api/client";
 import BodyHeatmap from "../components/BodyHeatmap";
+import ProgressChart from "../components/ProgressChart";
+import type { Exercise, ExerciseProgress } from "../types";
 
 export default function Analytics() {
-  const [data, setData] = useState<Record<string, number>>({});
-  const [loading, setLoading] = useState(true);
+  const [heatmapData, setHeatmapData] = useState<Record<string, number>>({});
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [selectedExercise, setSelectedExercise] = useState<string>("");
+  const [progressData, setProgressData] = useState<ExerciseProgress[]>([]);
+  const [loading, setLoading] = useState({ heatmap: true, chart: false });
 
   useEffect(() => {
-    getHeatmapData()
-      .then(setData)
-      .catch((err) => console.error("Failed to load heatmap", err))
-      .finally(() => setLoading(false));
+    let mounted = true;
+
+    Promise.all([
+      getHeatmapData(),
+      getExercises()
+    ]).then(([hData, exData]) => {
+      if (!mounted) return;
+      setHeatmapData(hData);
+      setExercises(exData);
+      if (exData.length > 0) setSelectedExercise(exData[0].id);
+    })
+    .catch(err => console.error("Analytics Load Error:", err))
+    .finally(() => {
+      if (mounted) setLoading(prev => ({ ...prev, heatmap: false }));
+    });
+
+    return () => { mounted = false; };
   }, []);
 
+  useEffect(() => {
+    if (!selectedExercise) return;
+    
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLoading(prev => ({ ...prev, chart: true }));
+    
+    getExerciseProgress(selectedExercise)
+      .then(setProgressData)
+      .catch(err => console.error("Chart Load Error:", err))
+      .finally(() => setLoading(prev => ({ ...prev, chart: false })));
+  }, [selectedExercise]);
+
   return (
-    <div>
+    <div style={{ paddingBottom: 40 }}>
       <div className="page-header" style={{ marginBottom: 28 }}>
-        <div>
-          <div className="font-display" style={{ fontSize: 36, lineHeight: 1 }}>ANALYTICS</div>
-          <div style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 4 }}>Last 30 Days Muscle Heatmap</div>
-        </div>
+        <div className="font-display" style={{ fontSize: 36 }}>ANALYTICS</div>
       </div>
 
-      {loading ? (
-        <div style={{ textAlign: "center", color: "var(--text-muted)", paddingTop: 40 }}>Loading heatmap...</div>
-      ) : Object.keys(data).length === 0 ? (
-        <div className="card" style={{ padding: 48, textAlign: "center" }}>
-          <div style={{ color: "var(--text-muted)" }}>No workouts logged in the last 30 days.</div>
-        </div>
-      ) : (
-        <div className="card" style={{ padding: 24 }}>
-          <BodyHeatmap data={data} />
+      {/* Muscle Heatmap Section */}
+      <div className="card" style={{ padding: 24, marginBottom: 24 }}>
+        <h3 className="font-display" style={{ fontSize: 20, marginBottom: 20 }}>MUSCLE HEATMAP</h3>
+        {loading.heatmap ? (
+          <div style={{ textAlign: "center", padding: 60, color: "var(--text-muted)" }}>Loading Heatmap...</div>
+        ) : (
+          <BodyHeatmap data={heatmapData} />
+        )}
+      </div>
+
+      {/* Strength Progress Section */}
+      <div className="card" style={{ padding: 24 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
+          <h3 className="font-display" style={{ fontSize: 20 }}>STRENGTH PROGRESS</h3>
           
-          <div style={{ marginTop: 40, borderTop: "1px solid var(--border)", paddingTop: 24 }}>
-            <h3 style={{ fontSize: 14, color: "var(--text-muted)", letterSpacing: "0.1em", marginBottom: 16 }}>
-              MUSCLE BREAKDOWN (SETS)
-            </h3>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 12 }}>
-              {Object.entries(data).sort((a, b) => b[1] - a[1]).map(([muscle, count]) => (
-                <div key={muscle} style={{ display: "flex", justifyContent: "space-between", padding: "12px", background: "var(--surface-2)", borderRadius: 8 }}>
-                  <span style={{ textTransform: "capitalize", fontSize: 14 }}>{muscle}</span>
-                  <span style={{ fontWeight: 600, color: "var(--accent)" }}>{count}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <select 
+            className="input" 
+            style={{ width: "auto", minWidth: 200, cursor: "pointer", background: "var(--surface-2)" }}
+            value={selectedExercise}
+            onChange={(e) => setSelectedExercise(e.target.value)}
+          >
+            {exercises.map(ex => (
+              <option key={ex.id} value={ex.id}>{ex.name}</option>
+            ))}
+          </select>
         </div>
-      )}
+
+        {loading.chart ? (
+          <div style={{ height: 320, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)" }}>
+            Updating Chart...
+          </div>
+        ) : (
+          <ProgressChart key={selectedExercise} data={progressData} />
+        )}
+      </div>
     </div>
   );
 }

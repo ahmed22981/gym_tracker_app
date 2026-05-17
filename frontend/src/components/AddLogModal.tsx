@@ -7,21 +7,28 @@ import { useTimer } from "../context/TimerContext";
 interface Props {
   sessionId: string;
   currentLogs: WorkoutLog[];
+  initialExerciseId?: string;
   onAdded: (log: WorkoutLog) => void;
   onClose: () => void;
 }
 
-export default function AddLogModal({ sessionId, currentLogs, onAdded, onClose }: Props) {
+export default function AddLogModal({ sessionId, currentLogs, initialExerciseId, onAdded, onClose }: Props) {
   const [exercises, setExercises] = useState<Exercise[]>([]);
-  const [exerciseId, setExerciseId] = useState("");
+  const [exerciseId, setExerciseId] = useState(initialExerciseId || "");
   const [reps, setReps] = useState("10");
   const [weight, setWeight] = useState("20");
   const [saving, setSaving] = useState(false);
   
   const { startTimer } = useTimer();
 
+  // تقسيم التمارين لمجموعتين
+  const currentSessionExerciseIds = new Set(currentLogs.map(l => l.exercise));
+  
+  const sessionExercises = exercises.filter(ex => currentSessionExerciseIds.has(ex.id));
+  const otherExercises = exercises.filter(ex => !currentSessionExerciseIds.has(ex.id));
+
   useEffect(() => { 
-    getExercises().then(setExercises); 
+    getExercises().then(setExercises);
   }, []);
 
   useEffect(() => {
@@ -98,9 +105,22 @@ export default function AddLogModal({ sessionId, currentLogs, onAdded, onClose }
               onChange={(e) => setExerciseId(e.target.value)}
               style={{ cursor: "pointer", fontSize: 15 }}>
               <option value="">Select exercise...</option>
-              {exercises.map((ex) => (
-                <option key={ex.id} value={ex.id}>{ex.name}</option>
-              ))}
+              
+              {/* المجموعة الأولى: التمارين الحالية في السيشن */}
+              {sessionExercises.length > 0 && (
+                <optgroup label="CURRENT SESSION">
+                  {sessionExercises.map((ex) => (
+                    <option key={ex.id} value={ex.id}>{ex.name}</option>
+                  ))}
+                </optgroup>
+              )}
+
+              {/* المجموعة الثانية: باقي التمارين */}
+              <optgroup label="ALL EXERCISES">
+                {otherExercises.map((ex) => (
+                  <option key={ex.id} value={ex.id}>{ex.name}</option>
+                ))}
+              </optgroup>
             </select>
           </div>
 

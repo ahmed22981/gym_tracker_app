@@ -12,6 +12,7 @@ export default function Exercises() {
   const [name, setName] = useState("");
   const [targetMuscle, setTargetMuscle] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
+  const [videoFile, setVideoFile] = useState<File | null>(null);
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
@@ -22,10 +23,22 @@ export default function Exercises() {
     if (!name.trim()) return;
     setCreating(true);
     try {
-      const ex = await createExercise({ name: name.trim(), target_muscle: targetMuscle.trim(), video_url: videoUrl.trim() || null });
+      const formData = new FormData();
+      formData.append("name", name.trim());
+      formData.append("target_muscle", targetMuscle.trim());
+      if (videoUrl.trim()) formData.append("video_url", videoUrl.trim());
+      if (videoFile) formData.append("video_file", videoFile);
+
+      const ex = await createExercise(formData);
       setExercises((prev) => [ex, ...prev]);
-      setName(""); setTargetMuscle(""); setVideoUrl(""); setShowForm(false);
-    } finally { setCreating(false); }
+      setName(""); 
+      setTargetMuscle(""); 
+      setVideoUrl(""); 
+      setVideoFile(null);
+      setShowForm(false);
+    } finally { 
+      setCreating(false); 
+    }
   }
 
   const filtered = exercises.filter((ex) =>
@@ -62,6 +75,10 @@ export default function Exercises() {
           <div>
             <label style={{ fontSize: 12, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>YOUTUBE URL</label>
             <input className="input" placeholder="https://youtube.com/watch?v=..." value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} />
+          </div>
+          <div>
+            <label style={{ fontSize: 12, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>OR UPLOAD VIDEO</label>
+            <input type="file" accept="video/*" className="input" onChange={(e) => setVideoFile(e.target.files?.[0] || null)} style={{ padding: "8px 12px" }} />
           </div>
           <div style={{ display: "flex", gap: 10 }}>
             <button className="btn-primary" onClick={handleCreate} disabled={!name.trim() || creating}>

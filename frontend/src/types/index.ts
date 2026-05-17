@@ -3,6 +3,7 @@ export interface Exercise {
   name: string;
   target_muscle: string;
   video_url: string | null;
+  video_file: string | null;
   created_at: string;
 }
 
@@ -60,4 +61,9 @@ export interface RoutineTemplate {
 export interface CreateTemplatePayload {
   name: string;
   exercise_ids: string[];
+}
+
+export interface ExerciseProgress {
+  date: string;
+  max_weight: number;
 }

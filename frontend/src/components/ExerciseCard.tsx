@@ -68,7 +68,13 @@ export default function ExerciseCard({ exercise, onDeleted }: Props) {
 
   return (
     <div className="card" style={{ overflow: "hidden" }}>
-      {thumbUrl ? (
+      {exercise.video_file ? (
+        <video 
+          src={exercise.video_file} 
+          controls 
+          style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block", background: "#000" }} 
+        />
+      ) : thumbUrl ? (
         <div style={{ position: "relative" }}>
           <img src={thumbUrl} alt={exercise.name}
             style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block" }} />

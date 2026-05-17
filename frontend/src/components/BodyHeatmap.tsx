@@ -3,17 +3,33 @@ import Model, { type IExerciseData, type Muscle } from 'react-body-highlighter';
 interface Props {
   data: Record<string, number>;
 }
+const MUSCLE_MAP: Record<string, Muscle> = {
+  "back": "lower-back",
+  "lats": "upper-back",
+  "back-deltoids": "trapezius",  
+  "trapezius": "trapezius",
+  "biceps": "biceps",
+  "triceps": "triceps",
+  "chest": "chest",
+  "abs": "abs",
+  "quads": "quadriceps",
+  "hamstrings": "hamstring",
+  "calves": "calves",
+  "glutes": "gluteal",
+  "shoulders": "neck", 
+};
 
 export default function BodyHeatmap({ data }: Props) {
   const rawData: IExerciseData[] = [];
   
   Object.entries(data).forEach(([muscle, count]) => {
-    const normalizedMuscle = muscle.toLowerCase().trim().replace(" ", "-") as Muscle;
-    
-    for (let i = 0; i < count; i++) {
+    const key = muscle.toLowerCase().trim();
+    const mappedMuscle = MUSCLE_MAP[key];
+
+    if (mappedMuscle) {
       rawData.push({
-        name: "Workout Set",
-        muscles: [normalizedMuscle]
+        name: `${muscle} (${count} sets)`,
+        muscles: [mappedMuscle]
       });
     }
   });

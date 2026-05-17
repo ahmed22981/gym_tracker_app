@@ -219,4 +219,29 @@ class MuscleHeatMapView(APIView):
         return Response(heatmap_data)
     
 
+class ExerciseProgressView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, pk):
+        logs = WorkoutLog.objects.filter(
+            session__user = request.user,
+            exercise_id = pk,
+        ).select_related('session').order_by('session__date')
+        
+        progress_dict = {}
+        
+        for log in logs:
+            date_str = str(log.session.date)
+            
+            if date_str not in progress_dict:
+                progress_dict[date_str] = log.weight
+            else:
+                if log.weight > progress_dict[date_str]:
+                    progress_dict[date_str] = log.weight
+        
+        chart_data = [{"date": k, "max_weight": v} for k, v in progress_dict.items()]
+        
+        return Response(chart_data)
+                
+        
         

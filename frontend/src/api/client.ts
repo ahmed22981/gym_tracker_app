@@ -8,6 +8,7 @@ import type {
   UpdateLogPayload,
   RoutineTemplate,
   CreateTemplatePayload,
+  ExerciseProgress,
 } from "../types";
 
 const api = axios.create({
@@ -78,8 +79,12 @@ export const getExercises = () =>
 export const getExercise = (id: string) =>
   api.get<Exercise>(`/exercises/${id}/`).then((r) => r.data);
 
-export const createExercise = (data: Omit<Exercise, "id" | "created_at">) =>
-  api.post<Exercise>("/exercises/", data).then((r) => r.data);
+export const createExercise = (data: FormData) =>
+  api
+    .post<Exercise>("/exercises/", data, {
+      headers: {"Content-Type": "multipart/form-data"},
+    })
+    .then((r) => r.data);
 
 export const deleteExercise = (id: string) =>
   api.delete(`/exercises/${id}/`).then((r) => r.data);
@@ -122,3 +127,10 @@ export const startTemplateSession = (id: string) =>
 
 export const getHeatmapData = () =>
   api.get<Record<string, number>>("/analytics/heatmap/").then((r) => r.data);
+
+export async function getExerciseProgress(
+  id: string,
+): Promise<ExerciseProgress[]> {
+  const response = await api.get(`/exercises/${id}/progress/`);
+  return response.data;
+}
