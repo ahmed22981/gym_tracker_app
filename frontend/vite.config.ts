@@ -36,16 +36,27 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
         runtimeCaching: [
           {
-            urlPattern: /\/api\//i,
+            urlPattern: ({request}) =>
+              request.method === "GET" &&
+              (request.destination === "" || request.url.includes("/api/")),
             handler: "NetworkFirst",
             options: {
-              cacheName: "gym-api-cache",
-              expiration: {
-                maxEntries: 200,
-                maxAgeSeconds: 60 * 60 * 24 * 7,
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
+              cacheName: "gym-api-get-cache",
+              expiration: {maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 7},
+              cacheableResponse: {statuses: [0, 200]},
+            },
+          },
+          {
+            urlPattern: ({request}) =>
+              ["POST", "PUT", "DELETE"].includes(request.method) &&
+              request.url.includes("/api/"),
+            handler: "NetworkOnly",
+            options: {
+              backgroundSync: {
+                name: "gym-offline-queue",
+                options: {
+                  maxRetentionTime: 24 * 60,
+                },
               },
             },
           },

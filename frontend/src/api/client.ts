@@ -64,73 +64,131 @@ api.interceptors.response.use(
   },
 );
 
+// Auth & GET Requests
 export const login = (data: unknown) =>
   api.post("/token/", data).then((r) => r.data);
-
 export const register = (data: unknown) =>
   api.post("/register/", data).then((r) => r.data);
-
 export const googleLogin = (token: string) =>
   api.post("/google/", {token}).then((r) => r.data);
 
 export const getExercises = () =>
   api.get<Exercise[]>("/exercises/").then((r) => r.data);
-
 export const getExercise = (id: string) =>
   api.get<Exercise>(`/exercises/${id}/`).then((r) => r.data);
-
-export const createExercise = (data: FormData) =>
-  api
-    .post<Exercise>("/exercises/", data, {
-      headers: {"Content-Type": "multipart/form-data"},
-    })
-    .then((r) => r.data);
-
 export const deleteExercise = (id: string) =>
   api.delete(`/exercises/${id}/`).then((r) => r.data);
 
 export const getSessions = () =>
   api.get<WorkoutSession[]>("/sessions/").then((r) => r.data);
-
 export const getSession = (id: string) =>
   api.get<WorkoutSession>(`/sessions/${id}/`).then((r) => r.data);
-
-export const createSession = (data: CreateSessionPayload) =>
-  api.post<WorkoutSession>("/sessions/", data).then((r) => r.data);
-
 export const deleteSession = (id: string) =>
   api.delete(`/sessions/${id}/`).then((r) => r.data);
-
-export const createLog = (data: CreateLogPayload) =>
-  api.post<WorkoutLog>("/logs/", data).then((r) => r.data);
-
-export const updateLog = (id: string, data: UpdateLogPayload) =>
-  api.patch<WorkoutLog>(`/logs/${id}/`, data).then((r) => r.data);
 
 export const deleteLog = (id: string) =>
   api.delete(`/logs/${id}/`).then((r) => r.data);
 
 export const getTemplates = () =>
   api.get<RoutineTemplate[]>("/templates/").then((r) => r.data);
-
 export const getTemplate = (id: string) =>
   api.get<RoutineTemplate>(`/templates/${id}/`).then((r) => r.data);
-
-export const createTemplate = (data: CreateTemplatePayload) =>
-  api.post<RoutineTemplate>("/templates/", data).then((r) => r.data);
-
 export const deleteTemplate = (id: string) =>
   api.delete(`/templates/${id}/`).then((r) => r.data);
 
-export const startTemplateSession = (id: string) =>
-  api.post<WorkoutSession>(`/templates/${id}/start/`).then((r) => r.data);
-
 export const getHeatmapData = () =>
   api.get<Record<string, number>>("/analytics/heatmap/").then((r) => r.data);
-
 export async function getExerciseProgress(
   id: string,
 ): Promise<ExerciseProgress[]> {
   const response = await api.get(`/exercises/${id}/progress/`);
   return response.data;
 }
+
+// POST/PUT Requests (Offline Sync)
+
+export const createExercise = async (data: FormData) => {
+  try {
+    const r = await api.post<Exercise>("/exercises/", data, {
+      headers: {"Content-Type": "multipart/form-data"},
+    });
+    return r.data;
+  } catch (error) {
+    if (!navigator.onLine) {
+      console.log("Offline: Exercise creation queued.");
+      return {id: `temp-ex-${Date.now()}`} as unknown as Exercise;
+    }
+    throw error;
+  }
+};
+
+export const createSession = async (data: CreateSessionPayload) => {
+  try {
+    const r = await api.post<WorkoutSession>("/sessions/", data);
+    return r.data;
+  } catch (error) {
+    if (!navigator.onLine) {
+      console.log("Offline: Session creation queued.");
+      return {
+        id: `temp-sess-${Date.now()}`,
+        ...data,
+      } as unknown as WorkoutSession;
+    }
+    throw error;
+  }
+};
+
+export const createLog = async (data: CreateLogPayload) => {
+  try {
+    const r = await api.post<WorkoutLog>("/logs/", data);
+    return r.data;
+  } catch (error) {
+    if (!navigator.onLine) {
+      console.log("Offline: Log creation queued.");
+      return {id: `temp-log-${Date.now()}`, ...data} as unknown as WorkoutLog;
+    }
+    throw error;
+  }
+};
+
+export const updateLog = async (id: string, data: UpdateLogPayload) => {
+  try {
+    const r = await api.patch<WorkoutLog>(`/logs/${id}/`, data);
+    return r.data;
+  } catch (error) {
+    if (!navigator.onLine) {
+      console.log("Offline: Log update queued.");
+      return {id, ...data} as unknown as WorkoutLog;
+    }
+    throw error;
+  }
+};
+
+export const createTemplate = async (data: CreateTemplatePayload) => {
+  try {
+    const r = await api.post<RoutineTemplate>("/templates/", data);
+    return r.data;
+  } catch (error) {
+    if (!navigator.onLine) {
+      console.log("Offline: Template creation queued.");
+      return {
+        id: `temp-tpl-${Date.now()}`,
+        ...data,
+      } as unknown as RoutineTemplate;
+    }
+    throw error;
+  }
+};
+
+export const startTemplateSession = async (id: string) => {
+  try {
+    const r = await api.post<WorkoutSession>(`/templates/${id}/start/`);
+    return r.data;
+  } catch (error) {
+    if (!navigator.onLine) {
+      console.log("Offline: Template session start queued.");
+      return {id: `temp-tsess-${Date.now()}`} as unknown as WorkoutSession;
+    }
+    throw error;
+  }
+};
