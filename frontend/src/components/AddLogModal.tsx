@@ -21,7 +21,6 @@ export default function AddLogModal({ sessionId, currentLogs, initialExerciseId,
   
   const { startTimer } = useTimer();
 
-  // تقسيم التمارين لمجموعتين
   const currentSessionExerciseIds = new Set(currentLogs.map(l => l.exercise));
   
   const sessionExercises = exercises.filter(ex => currentSessionExerciseIds.has(ex.id));
@@ -106,7 +105,6 @@ export default function AddLogModal({ sessionId, currentLogs, initialExerciseId,
               style={{ cursor: "pointer", fontSize: 15 }}>
               <option value="">Select exercise...</option>
               
-              {/* المجموعة الأولى: التمارين الحالية في السيشن */}
               {sessionExercises.length > 0 && (
                 <optgroup label="CURRENT SESSION">
                   {sessionExercises.map((ex) => (
@@ -115,7 +113,6 @@ export default function AddLogModal({ sessionId, currentLogs, initialExerciseId,
                 </optgroup>
               )}
 
-              {/* المجموعة الثانية: باقي التمارين */}
               <optgroup label="ALL EXERCISES">
                 {otherExercises.map((ex) => (
                   <option key={ex.id} value={ex.id}>{ex.name}</option>

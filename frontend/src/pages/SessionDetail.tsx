@@ -5,6 +5,7 @@ import type { WorkoutSession, WorkoutLog } from "../types";
 import { getSession } from "../api/client";
 import LogRow from "../components/LogRow";
 import AddLogModal from "../components/AddLogModal";
+import StoryExport from "../components/StoryExport";
 
 export default function SessionDetail() {
   const { id } = useParams<{ id: string }>();
@@ -57,7 +58,8 @@ export default function SessionDetail() {
         <ArrowLeft size={14} /> Back
       </button>
 
-      <div className="page-header">
+      {/* Modified Page Header Area */}
+      <div className="page-header" style={{ alignItems: "flex-start" }}>
         <div>
           <div className="font-display" style={{ fontSize: 36, lineHeight: 1 }}>
             {session.name.toUpperCase()}
@@ -68,10 +70,16 @@ export default function SessionDetail() {
             })}
           </div>
         </div>
-        <button className="btn-primary" onClick={() => openModalWithExercise()}
-          style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <Plus size={15} /> Log Set
-        </button>
+        
+        {/* Buttons Column */}
+        <div style={{ display: "flex", flexDirection: "column", minWidth: "160px" }}>
+          <button className="btn-primary" onClick={() => openModalWithExercise()}
+            style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: "center", width: "100%" }}>
+            <Plus size={15} /> Log Set
+          </button>
+          
+          {logs.length > 0 && <StoryExport session={{ ...session, logs }} />}
+        </div>
       </div>
 
       <div className="stats-grid">
