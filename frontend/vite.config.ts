@@ -36,6 +36,17 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
         runtimeCaching: [
           {
+            urlPattern: ({request, url}) =>
+              request.destination === "video" ||
+              url.pathname.match(/\.(mp4|webm|ogg)$/i),
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "gym-video-cache",
+              expiration: {maxEntries: 50, maxAgeSeconds: 30 * 24 * 60 * 60},
+              cacheableResponse: {statuses: [0, 200, 206]},
+            },
+          },
+          {
             urlPattern: ({request}) =>
               request.method === "GET" &&
               (request.destination === "" || request.url.includes("/api/")),
