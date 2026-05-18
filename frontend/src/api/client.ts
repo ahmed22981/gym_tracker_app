@@ -28,9 +28,15 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    if (!navigator.onLine || !error.response) {
+      return Promise.reject(error);
+    }
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       const refreshToken = localStorage.getItem("refresh_token");
+
       if (refreshToken) {
         try {
           const response = await axios.post(
@@ -40,8 +46,17 @@ api.interceptors.response.use(
           const newAccessToken = response.data.access;
           localStorage.setItem("access_token", newAccessToken);
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+
           return api(originalRequest);
-        } catch (refreshError) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (refreshError: any) {
+          if (!navigator.onLine || !refreshError.response) {
+            console.warn(
+              "Network error during token refresh. Keeping tokens for offline use.",
+            );
+            return Promise.reject(refreshError);
+          }
+
           console.warn("Refresh token expired, logging out");
           localStorage.removeItem("access_token");
           localStorage.removeItem("refresh_token");
@@ -56,7 +71,6 @@ api.interceptors.response.use(
     return Promise.reject(error);
   },
 );
-
 const QUEUE_KEY = "gym_offline_queue";
 
 const saveToOfflineQueue = (requestConfig: {

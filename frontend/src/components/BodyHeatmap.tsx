@@ -16,7 +16,8 @@ const MUSCLE_MAP: Record<string, Muscle> = {
   "hamstrings": "hamstring",
   "calves": "calves",
   "glutes": "gluteal",
-  "shoulders": "neck", 
+  "shoulders": "neck",
+  'adductors': 'abductors' 
 };
 
 export default function BodyHeatmap({ data }: Props) {
