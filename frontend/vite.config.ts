@@ -36,15 +36,11 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
         runtimeCaching: [
           {
+            // التعديل هنا: الفيديوهات تتعامل مع السيرفر دايركت بدون تدخل السيرفيس وركر
             urlPattern: ({request, url}) =>
               request.destination === "video" ||
               url.pathname.match(/\.(mp4|webm|ogg)$/i),
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "gym-video-cache",
-              expiration: {maxEntries: 50, maxAgeSeconds: 30 * 24 * 60 * 60},
-              cacheableResponse: {statuses: [0, 200, 206]},
-            },
+            handler: "NetworkOnly",
           },
           {
             urlPattern: ({request}) =>

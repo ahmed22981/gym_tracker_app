@@ -73,6 +73,7 @@ export default function ExerciseCard({ exercise, onDeleted }: Props) {
           src={exercise.video_file} 
           controls 
           preload="none"
+          playsInline
           style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block", background: "#000" }} 
         />
       ) : thumbUrl ? (
