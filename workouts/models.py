@@ -10,8 +10,8 @@ class Exercise(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='exercises', null=True)
     name = models.CharField(max_length=100)
     target_muscle = models.CharField(max_length=1000)
-    video_url = models.URLField(blank=True, null=True)
-    video_file = models.FileField(upload_to='exercise_videos/', blank=True, null=True, storage=VideoMediaCloudinaryStorage)
+    video_url = models.URLField(blank=True, null=True, max_length=500)
+    video_file = models.FileField(upload_to='exercise_videos/', blank=True, null=True, storage=VideoMediaCloudinaryStorage, max_length=500)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
