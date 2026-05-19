@@ -33,22 +33,26 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2,json}"],
+
+        navigateFallback: "/index.html",
+
         runtimeCaching: [
           {
-            // التعديل هنا: الفيديوهات تتعامل مع السيرفر دايركت بدون تدخل السيرفيس وركر
-            urlPattern: ({request, url}) =>
-              request.destination === "video" ||
-              url.pathname.match(/\.(mp4|webm|ogg)$/i),
-            handler: "NetworkOnly",
+            urlPattern: /^https:\/\/res\.cloudinary\.com\/.*/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "gym-videos-offline-cache",
+              expiration: {maxEntries: 15, maxAgeSeconds: 30 * 24 * 60 * 60},
+              cacheableResponse: {statuses: [0, 200]},
+              rangeRequests: true,
+            },
           },
           {
-            urlPattern: ({request}) =>
-              request.method === "GET" &&
-              (request.destination === "" || request.url.includes("/api/")),
+            urlPattern: ({url}) => url.pathname.includes("/api/"),
             handler: "NetworkFirst",
             options: {
-              cacheName: "gym-api-get-cache",
+              cacheName: "gym-api-data-cache",
               expiration: {maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 7},
               cacheableResponse: {statuses: [0, 200]},
             },

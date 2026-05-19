@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Play, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import type { Exercise } from "../types";
 import { deleteExercise } from "../api/client";
@@ -20,6 +20,12 @@ function getYouTubeId(url: string): string | null {
 export default function ExerciseCard({ exercise, onDeleted }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    if (exercise.video_file) {
+      fetch(exercise.video_file, { mode: 'cors' }).catch(() => {});
+    }
+  }, [exercise.video_file]);
 
   const ytId = exercise.video_url ? getYouTubeId(exercise.video_url) : null;
   const thumbUrl = ytId ? `https://img.youtube.com/vi/${ytId}/mqdefault.jpg` : null;
@@ -72,8 +78,10 @@ export default function ExerciseCard({ exercise, onDeleted }: Props) {
         <video 
           src={exercise.video_file} 
           controls 
-          preload="none"
+          muted
           playsInline
+          crossOrigin="anonymous"
+          preload="auto"
           style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block", background: "#000" }} 
         />
       ) : thumbUrl ? (
