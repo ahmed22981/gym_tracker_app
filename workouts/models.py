@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 import uuid
+from cloudinary_storage.storage import VideoMediaCloudinaryStorage
+
 
 
 class Exercise(models.Model):
@@ -9,7 +11,7 @@ class Exercise(models.Model):
     name = models.CharField(max_length=100)
     target_muscle = models.CharField(max_length=1000)
     video_url = models.URLField(blank=True, null=True)
-    video_file = models.FileField(upload_to='exercise_videos/', blank=True, null=True)
+    video_file = models.FileField(upload_to='exercise_videos/', blank=True, null=True, storage=VideoMediaCloudinaryStorage)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
