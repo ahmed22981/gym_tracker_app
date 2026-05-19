@@ -1,3 +1,4 @@
+import os
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
@@ -15,5 +16,5 @@ urlpatterns = [
     path('api/', include('workouts.urls')),
 ]
 
-if settings.DEBUG:
+if settings.DEBUG and not os.environ.get('RENDER'):
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
