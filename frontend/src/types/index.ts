@@ -16,6 +16,8 @@ export interface WorkoutLog {
   reps: number;
   weight: number;
   created_at: string;
+  video_url: string | null;
+  video_file: string | null;
 }
 
 export interface WorkoutSession {

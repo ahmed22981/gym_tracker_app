@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Plus, ArrowLeft, Dumbbell } from "lucide-react";
+import { Plus, ArrowLeft, Dumbbell, Play } from "lucide-react";
 import type { WorkoutSession, WorkoutLog } from "../types";
 import { getSession } from "../api/client";
 import LogRow from "../components/LogRow";
 import AddLogModal from "../components/AddLogModal";
 import StoryExport from "../components/StoryExport";
+import VideoModal from "../components/VideoModal";
 
 export default function SessionDetail() {
   const { id } = useParams<{ id: string }>();
@@ -15,6 +16,8 @@ export default function SessionDetail() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [preSelectedExercise, setPreSelectedExercise] = useState<string | undefined>(undefined);
+  
+  const [videoToPlay, setVideoToPlay] = useState<{ file: string | null, url: string | null } | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -27,6 +30,12 @@ export default function SessionDetail() {
   const openModalWithExercise = (exId?: string) => {
     setPreSelectedExercise(exId);
     setShowModal(true);
+  };
+
+  const handlePlayVideo = (file: string | null | undefined, url: string | null | undefined) => {
+    if (file || url) {
+      setVideoToPlay({ file: file || null, url: url || null });
+    }
   };
 
   const grouped = logs.reduce<Record<string, WorkoutLog[]>>((acc, log) => {
@@ -58,7 +67,6 @@ export default function SessionDetail() {
         <ArrowLeft size={14} /> Back
       </button>
 
-      {/* Modified Page Header Area */}
       <div className="page-header" style={{ alignItems: "flex-start" }}>
         <div>
           <div className="font-display" style={{ fontSize: 36, lineHeight: 1 }}>
@@ -71,7 +79,6 @@ export default function SessionDetail() {
           </div>
         </div>
         
-        {/* Buttons Column */}
         <div style={{ display: "flex", flexDirection: "column", minWidth: "160px" }}>
           <button className="btn-primary" onClick={() => openModalWithExercise()}
             style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: "center", width: "100%" }}>
@@ -106,56 +113,74 @@ export default function SessionDetail() {
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          {Object.entries(grouped).map(([exerciseName, exerciseLogs]) => (
-            <div key={exerciseName} className="card" style={{ overflow: "hidden" }}>
-              <div style={{
-                padding: "12px 16px", borderBottom: "1px solid var(--border)",
-                display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
-              }}>
-                <div style={{
-                  fontWeight: 600, fontSize: 14,
-                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                }}>
-                  {exerciseName}
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-                  <div style={{ display: "flex", gap: 6 }}>
-                    <span className="tag">{exerciseLogs.length} sets</span>
-                    <span className="tag" style={{ color: "var(--accent)", borderColor: "var(--accent-dim)" }}>
-                      {exerciseLogs.reduce((s, l) => s + l.reps * l.weight, 0).toFixed(0)}kg
-                    </span>
-                  </div>
-                  <button 
-                    onClick={() => openModalWithExercise(exerciseLogs[0].exercise)}
-                    style={{
-                      background: "var(--accent)", border: "none", borderRadius: 4,
-                      width: 24, height: 24, display: "flex", alignItems: "center", 
-                      justifyContent: "center", cursor: "pointer", color: "#000"
-                    }}>
-                    <Plus size={14} strokeWidth={3} />
-                  </button>
-                </div>
-              </div>
+          {Object.entries(grouped).map(([exerciseName, exerciseLogs]) => {
+            const hasVideo = !!(exerciseLogs[0]?.video_file || exerciseLogs[0]?.video_url);
 
-              <div className="log-header-row" style={{ borderBottom: "1px solid var(--border)" }}>
-                {["SET", "EXERCISE", "REPS", "KG", ""].map((h, i) => (
-                  <div key={i} style={{
-                    fontSize: 10, fontWeight: 600, color: "var(--text-muted)",
-                    letterSpacing: "0.08em", textAlign: i > 1 ? "center" : "left",
-                  }}>
-                    {h}
+            return (
+              <div key={exerciseName} className="card" style={{ overflow: "hidden" }}>
+                <div style={{
+                  padding: "12px 16px", borderBottom: "1px solid var(--border)",
+                  display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, overflow: "hidden" }}>
+                    <div style={{
+                      fontWeight: 600, fontSize: 14,
+                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                    }}>
+                      {exerciseName}
+                    </div>
+                    {hasVideo && (
+                      <button 
+                        onClick={() => handlePlayVideo(exerciseLogs[0].video_file, exerciseLogs[0].video_url)}
+                        style={{
+                          background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 4,
+                          width: 24, height: 24, display: "flex", alignItems: "center", 
+                          justifyContent: "center", cursor: "pointer", color: "var(--accent)", flexShrink: 0
+                        }}>
+                        <Play size={12} fill="currentColor" />
+                      </button>
+                    )}
                   </div>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <span className="tag">{exerciseLogs.length} sets</span>
+                      <span className="tag" style={{ color: "var(--accent)", borderColor: "var(--accent-dim)" }}>
+                        {exerciseLogs.reduce((s, l) => s + l.reps * l.weight, 0).toFixed(0)}kg
+                      </span>
+                    </div>
+                    <button 
+                      onClick={() => openModalWithExercise(exerciseLogs[0].exercise)}
+                      style={{
+                        background: "var(--accent)", border: "none", borderRadius: 4,
+                        width: 24, height: 24, display: "flex", alignItems: "center", 
+                        justifyContent: "center", cursor: "pointer", color: "#000"
+                      }}>
+                      <Plus size={14} strokeWidth={3} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="log-header-row" style={{ borderBottom: "1px solid var(--border)" }}>
+                  {["SET", "EXERCISE", "REPS", "KG", ""].map((h, i) => (
+                    <div key={i} style={{
+                      fontSize: 10, fontWeight: 600, color: "var(--text-muted)",
+                      letterSpacing: "0.08em", textAlign: i > 1 ? "center" : "left",
+                    }}>
+                      {h}
+                    </div>
+                  ))}
+                </div>
+
+                {exerciseLogs.map((log) => (
+                  <LogRow key={log.id} log={log}
+                    onUpdated={(updated) => setLogs(prev => prev.map(l => l.id === updated.id ? updated : l))}
+                    onDeleted={(deletedId) => setLogs(prev => prev.filter(l => l.id !== deletedId))}
+                  />
                 ))}
               </div>
-
-              {exerciseLogs.map((log) => (
-                <LogRow key={log.id} log={log}
-                  onUpdated={(updated) => setLogs(prev => prev.map(l => l.id === updated.id ? updated : l))}
-                  onDeleted={(deletedId) => setLogs(prev => prev.filter(l => l.id !== deletedId))}
-                />
-              ))}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -166,6 +191,14 @@ export default function SessionDetail() {
           initialExerciseId={preSelectedExercise}
           onAdded={(log) => { setLogs(prev => [...prev, log]); setShowModal(false); }}
           onClose={() => setShowModal(false)}
+        />
+      )}
+
+      {videoToPlay && (
+        <VideoModal 
+          file={videoToPlay.file} 
+          url={videoToPlay.url} 
+          onClose={() => setVideoToPlay(null)} 
         />
       )}
     </div>

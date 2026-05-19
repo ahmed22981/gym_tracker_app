@@ -14,6 +14,9 @@ class ExerciseSerializer(serializers.ModelSerializer):
 class WorkoutLogSerializer(serializers.ModelSerializer):
     exercise_name = serializers.ReadOnlyField(source='exercise.name')
     
+    video_url = serializers.ReadOnlyField(source='exercise.video_url')
+    video_file = serializers.FileField(source='exercise.video_file', read_only=True)
+    
     class Meta:
         model = WorkoutLog
         fields = '__all__'
