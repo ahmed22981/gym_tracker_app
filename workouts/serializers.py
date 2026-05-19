@@ -15,11 +15,17 @@ class WorkoutLogSerializer(serializers.ModelSerializer):
     exercise_name = serializers.ReadOnlyField(source='exercise.name')
     
     video_url = serializers.ReadOnlyField(source='exercise.video_url')
-    video_file = serializers.FileField(source='exercise.video_file', read_only=True)
+    
+    video_file = serializers.SerializerMethodField()
     
     class Meta:
         model = WorkoutLog
         fields = '__all__'
+        
+    def get_video_file(self, obj):
+        if obj.exercise and obj.exercise.video_file:
+            return obj.exercise.video_file.url
+        return None
         
 class WorkoutSessionSerializer(serializers.ModelSerializer):
     logs = WorkoutLogSerializer(many=True, read_only=True)
