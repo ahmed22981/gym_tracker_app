@@ -21,14 +21,12 @@ export default function ExerciseCard({ exercise, onDeleted }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  // useEffect(() => {
-  //   if (exercise.video_file) {
-  //     fetch(exercise.video_file, { mode: 'cors' }).catch(() => {});
-  //   }
-  // }, [exercise.video_file]);
-
   const ytId = exercise.video_url ? getYouTubeId(exercise.video_url) : null;
   const thumbUrl = ytId ? `https://img.youtube.com/vi/${ytId}/mqdefault.jpg` : null;
+
+  const safeVideoFile = exercise.video_file 
+    ? (exercise.video_file.includes('.mp4') ? exercise.video_file : `${exercise.video_file}.mp4`) 
+    : null;
 
   async function handleDelete(e: React.MouseEvent) {
     e.stopPropagation();
@@ -74,9 +72,9 @@ export default function ExerciseCard({ exercise, onDeleted }: Props) {
 
   return (
     <div className="card" style={{ overflow: "hidden" }}>
-      {exercise.video_file ? (
+      {safeVideoFile ? (
         <video 
-          src={exercise.video_file} 
+          src={safeVideoFile}
           controls 
           muted
           playsInline

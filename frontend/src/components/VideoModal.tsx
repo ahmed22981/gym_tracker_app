@@ -17,6 +17,8 @@ function getYouTubeId(url: string): string | null {
 export default function VideoModal({ file, url, onClose }: Props) {
   if (!file && !url) return null;
 
+  const safeVideoFile = file ? (file.includes('.mp4') ? file : `${file}.mp4`) : null;
+
   return (
     <div style={{
       position: "fixed", inset: 0, zIndex: 1000,
@@ -41,9 +43,9 @@ export default function VideoModal({ file, url, onClose }: Props) {
           <X size={18} />
         </button>
         
-        {file ? (
+        {safeVideoFile ? (
           <video 
-            src={file} 
+            src={safeVideoFile} 
             controls muted autoPlay playsInline crossOrigin="anonymous" preload="metadata"
             style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block", background: "#000" }} 
           />
