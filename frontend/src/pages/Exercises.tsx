@@ -3,7 +3,7 @@ import { Plus, X } from "lucide-react";
 import type { Exercise } from "../types";
 import { getExercises, createExercise } from "../api/client";
 import ExerciseCard from "../components/ExerciseCard";
-
+import Preloader from "../components/Preloader";
 export default function Exercises() {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,7 +95,7 @@ export default function Exercises() {
       </div>
 
       {loading ? (
-        <div style={{ color: "var(--text-muted)", paddingTop: 40, textAlign: "center" }}>Loading...</div>
+        < Preloader text="Loading Exercises..."/>
       ) : filtered.length === 0 ? (
         <div style={{ color: "var(--text-muted)", paddingTop: 40, textAlign: "center" }}>
           {search ? "No exercises match." : "No exercises yet. Add one above."}

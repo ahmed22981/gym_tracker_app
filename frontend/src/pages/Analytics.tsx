@@ -3,6 +3,7 @@ import { getHeatmapData, getExercises, getExerciseProgress } from "../api/client
 import BodyHeatmap from "../components/BodyHeatmap";
 import ProgressChart from "../components/ProgressChart";
 import type { Exercise, ExerciseProgress } from "../types";
+import Preloader from "../components/Preloader";
 
 export default function Analytics() {
   const [heatmapData, setHeatmapData] = useState<Record<string, number>>({});
@@ -53,7 +54,7 @@ export default function Analytics() {
       <div className="card" style={{ padding: 24, marginBottom: 24 }}>
         <h3 className="font-display" style={{ fontSize: 20, marginBottom: 20 }}>MUSCLE HEATMAP</h3>
         {loading.heatmap ? (
-          <div style={{ textAlign: "center", padding: 60, color: "var(--text-muted)" }}>Loading Heatmap...</div>
+          <Preloader text="Loading Heatmap..." />
         ) : (
           <BodyHeatmap data={heatmapData} />
         )}

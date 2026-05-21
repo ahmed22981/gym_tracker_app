@@ -5,6 +5,7 @@ import { Trash2, ChevronRight, Dumbbell } from "lucide-react";
 import type { WorkoutSession } from "../types";
 import { getSessions, deleteSession } from "../api/client";
 import Swal from "sweetalert2";
+import Preloader from "../components/Preloader";
 
 export default function Sessions() {
   const [sessions, setSessions] = useState<WorkoutSession[]>([]);
@@ -61,7 +62,7 @@ async function handleDelete(e: React.MouseEvent, id: string) {
       </div>
 
       {loading ? (
-        <div style={{ color: "var(--text-muted)", paddingTop: 40, textAlign: "center" }}>Loading...</div>
+        <Preloader text="Loading Sessions..."/>
       ) : sessions.length === 0 ? (
         <div style={{ paddingTop: 60, textAlign: "center" }}>
           <Dumbbell size={40} color="var(--border)" style={{ margin: "0 auto 16px" }} />

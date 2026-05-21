@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { login as loginApi, googleLogin as googleLoginApi } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { GoogleLogin } from '@react-oauth/google';
+import Preloader from "../components/Preloader";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -41,6 +42,7 @@ export default function Login() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleGoogleSuccess = async (credentialResponse: any) => {
     setError("");
+    setLoading(true)
     try {
       const data = await googleLoginApi(credentialResponse.credential);
       // 2. UPDATE: Pass BOTH tokens here too
@@ -50,10 +52,13 @@ export default function Login() {
     } catch (err) {
       console.error(err);
       setError("Google authentication failed. Please try again.");
+      setLoading(false)
     }
   };
 
   return (
+  <>
+    {loading && <Preloader fullScreen text="Logging in..." />}
     <div style={{ display: "flex", minHeight: "100dvh", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <div className="card" style={{ width: "100%", maxWidth: 400, padding: 32 }}>
         <div style={{ textAlign: "center", marginBottom: 32 }}>
@@ -87,7 +92,10 @@ export default function Login() {
         <div style={{ display: "flex", justifyContent: "center" }}>
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
-            onError={() => setError("Google login failed.")}
+            onError={() =>{ 
+              setError("Google login failed.");
+              setLoading(false)
+            }} 
             theme="filled_black"
             shape="circle"            
           />
@@ -98,5 +106,6 @@ export default function Login() {
         </div>
       </div>
     </div>
+  </>
   );
 }

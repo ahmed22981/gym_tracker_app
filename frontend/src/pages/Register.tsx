@@ -4,6 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { register as registerApi, googleLogin as googleLoginApi } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { GoogleLogin } from '@react-oauth/google';
+import Preloader from "../components/Preloader";
 
 export default function Register() {
   const [firstName, setFirstName] = useState("");
@@ -73,10 +74,11 @@ export default function Register() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleGoogleSuccess = async (credentialResponse: any) => {
     setError("");
+    setLoading(true);
     try {
       const data = await googleLoginApi(credentialResponse.credential);
       
-      // UPDATE: Pass both the access AND refresh tokens
+      // Pass both the access AND refresh tokens
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       login((data as any).access, (data as any).refresh); 
       
@@ -84,10 +86,13 @@ export default function Register() {
       navigate("/", { replace: true }); 
     } catch (err) {
       setError("Google authentication failed. Please try again.");
+      setLoading(false)
     }
   };
 
   return (
+  <>
+    {loading && <Preloader fullScreen text="Setting up your account"/>}
     <div style={{ display: "flex", minHeight: "100dvh", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <div className="card" style={{ width: "100%", maxWidth: 450, padding: 32 }}>
         <div style={{ textAlign: "center", marginBottom: 32 }}>
@@ -141,7 +146,10 @@ export default function Register() {
         <div style={{ display: "flex", justifyContent: "center" }}>
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
-            onError={() => setError("Google login failed.")}
+            onError={() => {
+              setError("Google login failed.");
+              setLoading(false)
+            }}
             theme="filled_black"
             shape="circle"
           />
@@ -152,5 +160,6 @@ export default function Register() {
         </div>
       </div>
     </div>
+  </>
   );
 }
