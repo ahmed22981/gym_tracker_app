@@ -3,14 +3,12 @@ import { createContext, useContext, useState, type ReactNode } from "react";
 interface AuthContextType {
   token: string | null;
   userName: string | null;
-  // 1. UPDATE: Accept a second optional parameter for the refresh token
   login: (accessToken: string, refreshToken?: string) => void;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Helper function to decode JWT without external libraries
 const decodeJWT = (token: string) => {
   try {
     const base64Url = token.split('.')[1];
@@ -28,12 +26,10 @@ const decodeJWT = (token: string) => {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(localStorage.getItem("access_token"));
   
-  // Try to extract the name or email from the token, fallback to "Athlete"
   const getInitialName = () => {
     const savedToken = localStorage.getItem("access_token");
     if (savedToken) {
       const decoded = decodeJWT(savedToken);
-      // We will look for first_name, name, or just fallback to generic name for now
       return decoded?.first_name || "Athlete"; 
     }
     return null;
@@ -41,7 +37,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const [userName, setUserName] = useState<string | null>(getInitialName());
 
-  // 2. UPDATE: Save BOTH tokens to localStorage
   const login = (accessToken: string, refreshToken?: string) => {
     localStorage.setItem("access_token", accessToken);
     if (refreshToken) {

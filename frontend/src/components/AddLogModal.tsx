@@ -133,14 +133,14 @@ export default function AddLogModal({ sessionId, currentLogs, initialExerciseId,
 
           <div className="add-form-grid">
             <div>
-              <label style={{ fontSize: 12, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>REPS</label>
-              <input className="input" type="number" value={reps}
+              <label htmlFor="reps" style={{ fontSize: 12, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>REPS</label>
+              <input id="reps" className="input" type="number" value={reps}
                 onChange={(e) => setReps(e.target.value)}
                 min={1} style={{ fontSize: 18, fontWeight: 600, textAlign: "center" }} />
             </div>
             <div>
-              <label style={{ fontSize: 12, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>WEIGHT (kg)</label>
-              <input className="input" type="number" value={weight}
+              <label htmlFor="weight" style={{ fontSize: 12, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>WEIGHT (kg)</label>
+              <input id="weight" className="input" type="number" value={weight}
                 onChange={(e) => setWeight(e.target.value)}
                 min={0} step={0.5} style={{ fontSize: 18, fontWeight: 600, textAlign: "center" }} />
             </div>

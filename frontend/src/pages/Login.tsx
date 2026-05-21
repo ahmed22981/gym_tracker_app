@@ -65,12 +65,12 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div>
-            <label style={{ fontSize: 12, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>EMAIL ADDRESS</label>
-            <input className="input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+            <label htmlFor="email" style={{ fontSize: 12, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>EMAIL ADDRESS</label>
+            <input id="email" className="input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div>
-            <label style={{ fontSize: 12, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>PASSWORD</label>
-            <input className="input" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+            <label htmlFor="password" style={{ fontSize: 12, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>PASSWORD</label>
+            <input id="password" className="input" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
           
           <button type="submit" className="btn-primary" disabled={loading} style={{ marginTop: 8 }}>
