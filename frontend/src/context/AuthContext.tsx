@@ -3,8 +3,10 @@ import { createContext, useContext, useState, type ReactNode } from "react";
 interface AuthContextType {
   token: string | null;
   userName: string | null;
+  hasSeenOnboarding: boolean;
   login: (accessToken: string, refreshToken?: string) => void;
   logout: () => void;
+  completeOnboardingState: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,7 +37,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return null;
   };
 
+  const getInitialOnboardingState = () => {
+    const savedToken = localStorage.getItem("access_token");
+    if (savedToken) {
+      const decoded = decodeJWT(savedToken);
+      const currentName = decoded?.first_name || "Athlete";
+      
+      if (localStorage.getItem(`gym_onboarding_done_${currentName}`) === "true") {
+        return true;
+      }
+      
+      return decoded?.has_seen_onboarding || false; 
+    }
+    return false;
+  };
+
   const [userName, setUserName] = useState<string | null>(getInitialName());
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean>(getInitialOnboardingState());
 
   const login = (accessToken: string, refreshToken?: string) => {
     localStorage.setItem("access_token", accessToken);
@@ -45,19 +63,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(accessToken);
     
     const decoded = decodeJWT(accessToken);
-    setUserName(decoded?.first_name || "Athlete");
+    const firstName = decoded?.first_name || "Athlete";
+    setUserName(firstName);
+    
+    const hasLocalOverride = localStorage.getItem(`gym_onboarding_done_${firstName}`) === "true";
+    setHasSeenOnboarding(hasLocalOverride || decoded?.has_seen_onboarding || false);
   };
 
-  // 3. UPDATE: Delete BOTH tokens on logout
   const logout = () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
+    if (userName) {
+      localStorage.removeItem(`gym_onboarding_done_${userName}`);
+    }
     setToken(null);
     setUserName(null);
+    setHasSeenOnboarding(false);
+  };
+
+  const completeOnboardingState = () => {
+    setHasSeenOnboarding(true);
+    if (userName) {
+      localStorage.setItem(`gym_onboarding_done_${userName}`, "true");
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ token, userName, login, logout }}>
+    <AuthContext.Provider value={{ token, userName, hasSeenOnboarding, login, logout, completeOnboardingState }}>
       {children}
     </AuthContext.Provider>
   );

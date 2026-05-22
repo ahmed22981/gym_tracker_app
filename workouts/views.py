@@ -2,7 +2,7 @@ from rest_framework import generics
 from django.conf import settings
 from django.contrib.auth.models import User
 from rest_framework.permissions import AllowAny, IsAuthenticated 
-from .models import Exercise, WorkoutSessison, WorkoutLog, RoutineTemplate, RoutineItem
+from .models import Exercise, WorkoutSessison, WorkoutLog, RoutineTemplate, RoutineItem, UserProfile
 from .serializers import ExerciseSerializer, RegisterSerializer, WorkoutLogSerializer, WorkoutSessionSerializer, CustomTokenObtainPairSerializer, RoutineTemplateSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 
@@ -108,6 +108,12 @@ class GoogleLoginView(APIView):
             refresh = RefreshToken.for_user(user)
             access_token = refresh.access_token
             access_token['first_name'] = user.first_name
+            
+            if hasattr(user, 'profile'):
+                access_token['has_seen_onboarding'] = user.profile.has_seen_onboarding
+            else:
+                access_token['has_seen_onboarding'] = False
+
 
             return Response({
                 'refresh': str(refresh),
@@ -244,4 +250,12 @@ class ExerciseProgressView(APIView):
         return Response(chart_data)
                 
         
-        
+# Update onboarding status
+class CompleteOnboardingView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def patch(self, request):
+        profile, created = UserProfile.objects.get_or_create(user=request.user)
+        profile.has_seen_onboarding = True
+        profile.save()
+        return Response({"status: Onboarding complete"})

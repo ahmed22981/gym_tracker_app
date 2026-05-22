@@ -143,6 +143,10 @@ export const deleteTemplate = (id: string) =>
 
 export const getHeatmapData = () =>
   api.get<Record<string, number>>("/analytics/heatmap/").then((r) => r.data);
+
+export const completeOnboarding = () =>
+  api.patch("/users/onboarding/").then((r) => r.data);
+
 export async function getExerciseProgress(
   id: string,
 ): Promise<ExerciseProgress[]> {

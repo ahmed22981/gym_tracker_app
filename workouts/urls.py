@@ -21,5 +21,7 @@ urlpatterns = [
     path('templates/<uuid:pk>/', views.RoutineTemplateDetailView.as_view(), name='template-detail'),
     path('templates/<uuid:pk>/start/', views.StartTemplateView.as_view(), name='template-start'),
     
-    path('analytics/heatmap/', views.MuscleHeatMapView.as_view(), name='analytics-heatmap')
+    path('analytics/heatmap/', views.MuscleHeatMapView.as_view(), name='analytics-heatmap'),
+    
+    path('users/onboarding/', views.CompleteOnboardingView.as_view(), name='complete-onboarding'),
 ]

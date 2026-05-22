@@ -79,10 +79,15 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         
         token['first_name'] = user.first_name
         
+        if hasattr(user, 'profile'):
+            token['has_seen_onboarding'] = user.profile.has_seen_onboarding
+        else:
+            token['has_seen_onboarding'] = False
+       
         return token
     
     
-# NEW: Template Serializers
+# Template Serializers
 class RoutineItemSerializer(serializers.ModelSerializer):
     exercise_name = serializers.ReadOnlyField(source='exercise.name')
 
