@@ -16,6 +16,41 @@
     <meta name="theme-color" content="#0a0a0a" />
     <link rel="apple-touch-icon" href="/pwa-192x192.png" />
     <title>GymDiary</title>
+
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        background-color: #0a0a0a;
+      }
+
+      #root:empty {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      #root:empty::before {
+        content: "";
+        width: 80px;
+        height: 80px;
+        background: url("/gemini-svg.svg") center/contain no-repeat;
+        animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
