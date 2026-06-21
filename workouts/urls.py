@@ -5,6 +5,7 @@ from . import views
 urlpatterns = [
     path('register/', views.RegisterView.as_view(), name='register'),
     path('google/', views.GoogleLoginView.as_view(), name='google_login'),
+    path('login/', views.CustomTokenObtainPairView.as_view(), name='login'),
     
     path('exercises/', views.ExerciseListCreateView.as_view(), name='exercise-list'),
     path('exercises/<uuid:pk>/', views.ExerciseDetailView.as_view(), name='exercise-detail'),
@@ -24,4 +25,15 @@ urlpatterns = [
     path('analytics/heatmap/', views.MuscleHeatMapView.as_view(), name='analytics-heatmap'),
     
     path('users/onboarding/', views.CompleteOnboardingView.as_view(), name='complete-onboarding'),
+    path('users/profile/', views.UserProfileView.as_view(), name='user-profile'),
+
+    # Nutrition & food track
+    path('nutrition/custom-meals/', views.CustomMealListCreateView.as_view(), name='custom-meal-list'),
+    path('nutrition/custom-meals/<uuid:pk>/', views.CustomMealDetailView.as_view(), name='custom-meal-detail'),
+
+    path('nutrition/logs/', views.DailyFoodLogListCreateView.as_view(), name='food-log-list'),
+    path('nutrition/logs/<uuid:pk>/', views.DailyFoodLogDetailView.as_view(), name='food-log-detail'),
+
+    path('nutrition/summary/', views.DailyNutritionSummaryView.as_view(), name='nutrition-summary'),
+
 ]

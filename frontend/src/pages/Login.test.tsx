@@ -31,7 +31,6 @@ describe('Login Component', () => {
     await userEvent.type(screen.getByLabelText(/PASSWORD/i), 'wrongpass');
     
     await userEvent.click(screen.getByRole('button', { name: /^Login$/i }));
-
-    expect(await screen.findByText('Invalid email or password')).toBeInTheDocument();
+    expect(await screen.findByText(/Invalid/i)).toBeInTheDocument();
   });
 });

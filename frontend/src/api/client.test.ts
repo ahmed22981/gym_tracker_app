@@ -1,12 +1,20 @@
 import {describe, test, expect, beforeEach, vi} from "vitest";
-import {createSession} from "./client";
+import {createSession, createCustomMeal} from "./client";
 
 vi.mock("axios", () => {
   return {
     default: {
       create: vi.fn(() => ({
         interceptors: {request: {use: vi.fn()}, response: {use: vi.fn()}},
-        post: vi.fn(),
+        post: vi.fn((url) => {
+          if (url === "/nutrition/custom-meals/") {
+            return Promise.resolve({data: {id: "123", name: "Oats"}});
+          }
+          return Promise.reject(new Error("Network Error"));
+        }),
+        get: vi.fn().mockResolvedValue({data: []}),
+        patch: vi.fn().mockResolvedValue({data: {}}),
+        delete: vi.fn().mockResolvedValue({data: {}}),
       })),
     },
   };
@@ -32,5 +40,21 @@ describe("API Client Offline Logic", () => {
     expect(queue.length).toBe(1);
     expect(queue[0].url).toBe("/sessions/");
     expect(queue[0].method).toBe("POST");
+  });
+});
+
+describe("API Client Nutrition Logic", () => {
+  test("createCustomMeal sends correct POST request", async () => {
+    vi.stubGlobal("navigator", {onLine: true});
+    const payload = {
+      name: "Oats",
+      calories: 300,
+      protein: 10,
+      carbs: 50,
+      fats: 5,
+    };
+    const result = await createCustomMeal(payload);
+
+    expect(result.name).toBe("Oats");
   });
 });

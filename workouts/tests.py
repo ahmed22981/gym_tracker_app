@@ -1,10 +1,11 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
-from .models import Exercise, WorkoutSessison, WorkoutLog, RoutineTemplate, RoutineItem
+from .models import Exercise, WorkoutSessison, WorkoutLog, RoutineTemplate, RoutineItem, UserProfile, CustomMeal, DailyFoodLog
 
 from rest_framework.test import APITestCase
 from rest_framework import status
 from django.urls import reverse
+from datetime import date
 
 class GymModelsTest(TestCase):
     
@@ -200,3 +201,84 @@ class StartTemplateIntegrationTest(APITestCase):
         new_bench_logs = WorkoutLog.objects.filter(session=new_session, exercise=self.bench)
         self.assertEqual(new_bench_logs.count(), 1)
         self.assertEqual(new_bench_logs.get(set_number=1).weight, 80)
+
+class NutritionModelsTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='nutrition_user', password='123')
+        
+        self.profile, created = UserProfile.objects.get_or_create(user=self.user)
+        
+        self.profile.gender = 'M'
+        self.profile.date_of_birth = date(1998, 1, 1)
+        self.profile.weight_kg = 80.0
+        self.profile.height_cm = 180.0
+        self.profile.activity_level = 'ACTIVE'
+        self.profile.goal = 'CUT'
+        
+        self.profile.save()
+
+    def test_user_profile_macro_calculation(self):
+        self.assertIsNotNone(self.profile.target_calories)
+        self.assertIsNotNone(self.profile.target_protein)
+        self.assertIsNotNone(self.profile.target_carbs)
+        self.assertIsNotNone(self.profile.target_fats)
+        
+        self.assertTrue(self.profile.target_calories > 1500)
+
+class NutritionApiTest(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='api_nut_user', password='123')
+        self.client.force_authenticate(user=self.user)
+        
+        self.custom_meal_url = reverse('custom-meal-list')
+        self.food_log_url = reverse('food-log-list')
+        self.summary_url = reverse('nutrition-summary')
+        
+        self.meal = CustomMeal.objects.create(
+            user=self.user,
+            name='Test Chicken Rice',
+            calories=500,
+            protein=40,
+            carbs=50,
+            fats=10
+        )
+
+    def test_create_custom_meal(self):
+        data = {
+            'name': 'Oats and Whey',
+            'calories': 350,
+            'protein': 30,
+            'carbs': 40,
+            'fats': 8
+        }
+        response = self.client.post(self.custom_meal_url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(CustomMeal.objects.count(), 2)
+
+    def test_create_daily_food_log_with_custom_meal(self):
+        data = {
+            'date': str(date.today()),
+            'custom_meal': str(self.meal.id),
+            'servings': 2.0
+        }
+        response = self.client.post(self.food_log_url, data)
+        
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['calories'], 1000)
+        self.assertEqual(response.data['protein'], 80)
+
+    def test_get_daily_summary(self):
+        DailyFoodLog.objects.create(
+            user=self.user,
+            date=date.today(),
+            meal_name='Snack',
+            servings=1.0,
+            calories=200,
+            protein=10,
+            carbs=20,
+            fats=5
+        )
+        
+        response = self.client.get(self.summary_url, {'date': str(date.today())})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['consumed_calories'], 200)

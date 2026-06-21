@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest --pool=forks --file-parallelism=false"
   },
   "dependencies": {
     "@react-oauth/google": "^0.13.5",

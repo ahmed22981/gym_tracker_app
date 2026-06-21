@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { CalendarDays, Plus, LayoutGrid, LogOut, User as UserIcon, Activity } from "lucide-react";
+import { CalendarDays, Plus, LayoutGrid, LogOut, User as UserIcon, Activity, Flame } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import FloatingTimer from "./FloatingTimer";
 import { useState, useEffect } from "react";
@@ -9,7 +9,8 @@ const navItems = [
   { to: "/", label: "Exercises", icon: LayoutGrid, end: true },
   { to: "/sessions", label: "Sessions", icon: CalendarDays },
   { to: "/sessions/new", label: "New", icon: Plus },
-  { to: "/analytics", label: "Analytics", icon: Activity }
+  { to: "/analytics", label: "Analytics", icon: Activity },
+  { to: "/nutrition", label: "Nutrition", icon: Flame },
 ];
 
 export default function Layout() {

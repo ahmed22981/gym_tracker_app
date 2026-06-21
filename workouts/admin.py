@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Exercise, WorkoutSessison, WorkoutLog, RoutineItem, RoutineTemplate
+from .models import Exercise, WorkoutSessison, WorkoutLog, RoutineItem, RoutineTemplate, UserProfile
 
 
 @admin.register(Exercise)
@@ -26,7 +26,10 @@ class RoutineTemplateAdmin(admin.ModelAdmin):
 class RoutineItemAdmin(admin.ModelAdmin):
     list_display = ('template', 'exercise', 'order')
     
-    
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'goal', 'target_calories', 'target_protein', 'has_seen_onboarding')
+    list_filter = ('goal', 'gender', 'activity_level')
     
 
 

@@ -2,8 +2,8 @@ from rest_framework import generics
 from django.conf import settings
 from django.contrib.auth.models import User
 from rest_framework.permissions import AllowAny, IsAuthenticated 
-from .models import Exercise, WorkoutSessison, WorkoutLog, RoutineTemplate, RoutineItem, UserProfile
-from .serializers import ExerciseSerializer, RegisterSerializer, WorkoutLogSerializer, WorkoutSessionSerializer, CustomTokenObtainPairSerializer, RoutineTemplateSerializer
+from .models import Exercise, WorkoutSessison, WorkoutLog, RoutineTemplate, RoutineItem, UserProfile, CustomMeal, DailyFoodLog
+from .serializers import ExerciseSerializer, RegisterSerializer, WorkoutLogSerializer, WorkoutSessionSerializer, CustomTokenObtainPairSerializer, RoutineTemplateSerializer, UserProfileSerializer, CustomMealSerializer, DailyFoodLogSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 
  #GOOGLE AUTH
@@ -13,9 +13,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from datetime import timedelta
+from datetime import date, timedelta, datetime
 from django.utils import timezone
-from django.db.models import Count
+from django.db.models import Count, Sum
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
@@ -259,3 +259,75 @@ class CompleteOnboardingView(APIView):
         profile.has_seen_onboarding = True
         profile.save()
         return Response({"status: Onboarding complete"})
+    
+class UserProfileView(generics.RetrieveUpdateAPIView):
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_object(self):
+        profile = UserProfile.objects.filter(user=self.request.user).first()
+        
+        if not profile:
+            profile = UserProfile.objects.create(user = self.request.user)
+        return profile
+
+# Custom Meals View
+class CustomMealListCreateView(generics.ListCreateAPIView):
+    serializer_class = CustomMealSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return CustomMeal.objects.filter(user=self.request.user).order_by("-created_at")
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+    
+class CustomMealDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = CustomMealSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return CustomMeal.objects.filter(user=self.request.user)
+    
+#Daily food log view
+class DailyFoodLogListCreateView(generics.ListCreateAPIView):
+    serializer_class = DailyFoodLogSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        date_str = self.request.query_params.get('date', str(date.today()))
+        return DailyFoodLog.objects.filter(user=self.request.user, date=date_str).order_by('-created_at')
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+    
+class DailyFoodLogDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = DailyFoodLogSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return DailyFoodLog.objects.filter(user=self.request.user)
+    
+#Summary View for frontend dashboard
+class DailyNutritionSummaryView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        date_str = request.query_params.get('date', str(date.today()))
+
+        logs = DailyFoodLog.objects.filter(user=request.user, date=date_str)
+
+        summary = logs.aggregate(
+            consumed_calories=Sum('calories'),
+            consumed_protein=Sum('protein'),
+            consumed_carbs=Sum('carbs'),
+            consumed_fats=Sum('fats')
+        )
+
+        return Response({
+            "date": date_str,
+            "consumed_calories": summary['consumed_calories'] or 0,
+            "consumed_protein": summary['consumed_protein'] or 0,
+            "consumed_carbs": summary['consumed_carbs'] or 0,
+            "consumed_fats": summary['consumed_fats'] or 0,
+        })

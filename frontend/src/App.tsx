@@ -11,6 +11,7 @@ import Register from "./pages/Register";
 import NewTemplate from "./pages/NewTemplate";
 import Analytics from "./pages/Analytics";
 import { TimerProvider } from "./context/TimerContext";
+import Nutrition from "./pages/Nutrition";
 
 export default function App() {
   return (
@@ -31,6 +32,7 @@ export default function App() {
               <Route path="templates/new" element={<NewTemplate />} /> 
               <Route path="sessions/:id" element={<SessionDetail />} />
               <Route path="analytics" element={<Analytics />} />
+              <Route path="nutrition" element={<Nutrition />} />
             </Route>
           </Route>
         </Routes>

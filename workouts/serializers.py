@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import Exercise, RoutineItem, RoutineTemplate, WorkoutSessison, WorkoutLog
+from .models import Exercise, RoutineItem, RoutineTemplate, WorkoutSessison, WorkoutLog, UserProfile, CustomMeal, DailyFoodLog
 from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -120,3 +120,52 @@ class RoutineTemplateSerializer(serializers.ModelSerializer):
                 order=index
             )
         return template
+    
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = [
+            'gender', 'date_of_birth', 'weight_kg', 'height_cm', 
+            'activity_level', 'goal', 'target_calories', 
+            'target_protein', 'target_carbs', 'target_fats',
+            'has_seen_onboarding'
+        ]
+        read_only_fields = ['target_calories', 'target_protein', 'target_carbs', 'target_fats', 'has_seen_onboarding']
+
+
+class CustomMealSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source='user.username')
+    class Meta:
+        model = CustomMeal
+        fields = '__all__'
+
+
+class DailyFoodLogSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source='user.username')
+
+    meal_name = serializers.CharField(required=False)
+    class Meta:
+        model = DailyFoodLog
+        fields = '__all__'
+        read_only_fields = ['calories', 'protein', 'carbs', 'fats']
+
+    def create(self, validated_data):
+        # if user choose existing meal, calculate macros automatic
+        custom_meal = validated_data.get('custom_meal')
+        servings = validated_data.get('servings', 1.0)
+
+        if custom_meal:
+            validated_data['meal_name'] = custom_meal.name
+            validated_data['calories'] = int(custom_meal.calories * servings)
+            validated_data['protein'] = int(custom_meal.protein * servings)
+            validated_data['carbs'] = int(custom_meal.carbs * servings)
+            validated_data['fats'] = int(custom_meal.fats * servings)
+        else:
+            # if input meals manualy must sent the macros with the frontend
+            request = self.context.get('request')
+            validated_data['calories'] = int(request.data.get('calories', 0) * servings)
+            validated_data['protein'] = int(request.data.get('protein', 0) * servings)
+            validated_data['carbs'] = int(request.data.get('carbs', 0) * servings)
+            validated_data['fats'] = int(request.data.get('fats', 0) * servings)
+
+        return super().create(validated_data)
