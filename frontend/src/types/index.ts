@@ -97,7 +97,6 @@ export type UpdateProfilePayload = Partial<
   >
 >;
 
-
 export interface CustomMeal {
   id: string;
   name: string;
@@ -111,6 +110,7 @@ export interface DailyFoodLog {
   id: string;
   date: string;
   meal_name: string;
+  details?: string;
   custom_meal?: string | null;
   servings: number;
   calories: number;
@@ -145,4 +145,23 @@ export interface CreateFoodLogPayload {
   protein?: number;
   carbs?: number;
   fats?: number;
+}
+
+// AI meal plan
+export interface AIMeal {
+  meal_name: string;
+  items: string[];
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+}
+
+export interface AIMealPlan {
+  plan_title: string;
+  total_calories: number;
+  total_protein: number;
+  total_carbs: number;
+  total_fats: number;
+  meals: AIMeal[];
 }

@@ -36,4 +36,6 @@ urlpatterns = [
 
     path('nutrition/summary/', views.DailyNutritionSummaryView.as_view(), name='nutrition-summary'),
 
+    path('nutrition/generate-ai-plan/', views.GenerateAIMealPlanView.as_view(), name='generate-ai-plan'),
+    path('nutrition/save-ai-plan/', views.SaveAIMealPlanView.as_view(), name='save-ai-plan')
 ]

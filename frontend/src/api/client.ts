@@ -16,6 +16,7 @@ import type {
   DailyFoodLog,
   CreateFoodLogPayload,
   DailyNutritionSummary,
+  AIMealPlan,
 } from "../types";
 
 const api = axios.create({
@@ -276,3 +277,9 @@ export const getDailySummary = (date: string) =>
   api
     .get<DailyNutritionSummary>(`/nutrition/summary/?date=${date}`)
     .then((r) => r.data);
+
+export const generateAIMealPlan = () =>
+  api.get<AIMealPlan>("/nutrition/generate-ai-plan/").then((r) => r.data);
+
+export const saveAIMealPlan = (data: {date: string; meals: unknown[]}) =>
+  api.post("/nutrition/save-ai-plan/", data).then((r) => r.data);

@@ -1,4 +1,7 @@
-from rest_framework import generics
+import os
+import json
+from google import genai
+from rest_framework import generics, status
 from django.conf import settings
 from django.contrib.auth.models import User
 from rest_framework.permissions import AllowAny, IsAuthenticated 
@@ -331,3 +334,120 @@ class DailyNutritionSummaryView(APIView):
             "consumed_carbs": summary['consumed_carbs'] or 0,
             "consumed_fats": summary['consumed_fats'] or 0,
         })
+    
+class GenerateAIMealPlanView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            profile = UserProfile.objects.get(user=request.user)
+            
+            if not profile.target_calories:
+                return Response(
+                    {"error": "Please calculate your macros first."}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            prompt = f"""
+            You are an expert sports nutritionist. Create a 1-day healthy, diverse, and Egyptian-friendly fitness meal plan for a person with the following profile:
+            - Goal: {profile.get_goal_display()}
+            - Target Calories: {profile.target_calories} kcal
+            - Macros: {profile.target_protein}g Protein, {profile.target_carbs}g Carbs, {profile.target_fats}g Fats.
+            
+            Dietary Guidelines:
+            1. Focus on HIGH-QUALITY, HEALTHY whole foods. Avoid empty calories or highly processed ingredients.
+            2. Introduce strong VARIETY across the meals. Do not repeat the same protein or carb sources in every meal. Mix it up!
+            3. Use delicious and nutritious Egyptian staples creatively (e.g., Foul mudammas with olive oil, grilled fish, lean beef, Qareesh cheese, eggs, sweet potatoes, oats, and plenty of fresh colorful vegetables/salads).
+            4. The meals must support intense physical training recovery while remaining realistic and easy to prep.
+            
+            IMPORTANT: Return ONLY a valid JSON object with the exact following structure. No introductions, no markdown, just the JSON:
+            {{
+                "plan_title": "string",
+                "total_calories": number,
+                "total_protein": number,
+                "total_carbs": number,
+                "total_fats": number,
+                "meals": [
+                    {{
+                        "meal_category": "string (e.g., Breakfast, Lunch, Snack, Dinner)",
+                        "meal_name": "string",
+                        "items": ["string", "string"],
+                        "calories": number,
+                        "protein": number,
+                        "carbs": number,
+                        "fats": number
+                    }}
+                ]
+            }}
+            """
+
+            client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+            
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt,
+            )
+            
+            text = response.text
+            
+            start_idx = text.find('{')
+            end_idx = text.rfind('}')
+            
+            if start_idx == -1 or end_idx == -1:
+                raise ValueError("AI did not return a valid JSON format.")
+                
+            json_str = text[start_idx:end_idx+1]
+            meal_plan = json.loads(json_str)
+            
+            return Response(meal_plan, status=status.HTTP_200_OK)
+
+        except UserProfile.DoesNotExist:
+            return Response({"error": "Profile not found."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            print(f"AI GENERATION ERROR: {str(e)}") 
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+class SaveAIMealPlanView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            meals_data = request.data.get("meals", [])
+            log_date = request.data.get("date")
+
+            if not log_date or not meals_data:
+                return Response(
+                    {"error": "Missing date or meals data."}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            logs_to_create = []
+
+            for meal in meals_data:
+                category = meal.get("meal_category", "Meal")
+                name = meal.get("meal_name", "AI Meal")
+                
+                items_str = "• " + "\n• ".join(meal.get("items", [])) if meal.get("items") else ""
+
+                logs_to_create.append(
+                    DailyFoodLog(
+                        user=request.user,
+                        date=log_date,
+                        meal_name=f"{category} - {name}"[:255], 
+                        details=items_str,        
+                        servings=1,
+                        calories=meal.get("calories", 0),
+                        protein=meal.get("protein", 0),
+                        carbs=meal.get("carbs", 0),
+                        fats=meal.get("fats", 0)
+                    )
+                )
+
+            if logs_to_create:
+                DailyFoodLog.objects.bulk_create(logs_to_create)
+
+            return Response({"message": "Meal plan saved to your log successfully!"}, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

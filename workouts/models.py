@@ -166,6 +166,7 @@ class DailyFoodLog(models.Model):
 
     # add meal without saving or choose from saved meal
     meal_name = models.CharField(max_length=300)
+    details = models.TextField(blank=True, null=True)
     custom_meal = models.ForeignKey(CustomMeal, on_delete=models.SET_NULL, null=True, blank=True)
     servings = models.FloatField(default=1.0)
 
