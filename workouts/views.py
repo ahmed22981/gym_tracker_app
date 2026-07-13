@@ -73,14 +73,14 @@ class WorkoutLogListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return WorkoutLog.objects.filter(session__user=self.request.user)
+        return WorkoutLog.objects.filter(session__user=self.request.user).select_related('exercise')
 
 class WorkoutLogDetailView(generics.RetrieveUpdateDestroyAPIView):  
     serializer_class = WorkoutLogSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return WorkoutLog.objects.filter(session__user=self.request.user)
+        return WorkoutLog.objects.filter(session__user=self.request.user).select_related('exercise')
 
 class GoogleLoginView(APIView):
     permission_classes = (AllowAny,)
@@ -182,22 +182,22 @@ class StartTemplateView(APIView):
                 
                 # Clone them into the new session!
                 for old_log in old_logs:
-                    WorkoutLog.objects.create(
+                    logs_to_create.append(WorkoutLog(
                         session=session,
                         exercise=item.exercise,
                         set_number=old_log.set_number,
-                        reps=old_log.reps,     # Pre-fill previous reps
-                        weight=old_log.weight  # Pre-fill previous weight
-                    )
+                        reps=old_log.reps,     
+                        weight=old_log.weight  
+                    ))
             else:
                 # If they have NEVER done this exercise before, just create 1 empty set
-                WorkoutLog.objects.create(
+                logs_to_create.append(WorkoutLog(
                     session=session,
                     exercise=item.exercise,
                     set_number=1,
                     reps=0,
                     weight=0.0
-                )
+                ))
 
             if logs_to_create:
                 WorkoutLog.objects.bulk_create(logs_to_create)
@@ -225,7 +225,7 @@ class MuscleHeatMapView(APIView):
             muscle_string = item['exercise__target_muscle'].lower()
             if not muscle_string:
                 continue
-            
+
             count = item['set_count']
             
             for m in [x.strip() for x in muscle_string.split(',')]:
