@@ -55,7 +55,7 @@ class WorkoutSessionListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return WorkoutSessison.objects.filter(user=self.request.user)
+        return WorkoutSessison.objects.filter(user=self.request.user).prefetch_related('logs__exercise').order_by('-date')
         
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -65,7 +65,7 @@ class WorkoutSessionDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return WorkoutSessison.objects.filter(user=self.request.user)
+        return WorkoutSessison.objects.filter(user=self.request.user).prefetch_related('logs__exercise')
 
 # Workout log views
 class WorkoutLogListCreateView(generics.ListCreateAPIView):
@@ -133,7 +133,7 @@ class RoutineTemplateListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
-        return RoutineTemplate.objects.filter(user=self.request.user)
+        return RoutineTemplate.objects.filter(user=self.request.user).prefetch_related('items__exercise')
     
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -163,14 +163,15 @@ class StartTemplateView(APIView):
         )
 
         # 2. Loop through all exercises saved in this template
-        items = template.items.all().order_by('order')
-        
+        items = template.items.select_related('exercise').order_by('order')
+        logs_to_create = []
+
         for item in items:
             # 3. Find the most recent time the user performed this specific exercise
             last_log = WorkoutLog.objects.filter(
                 session__user=request.user, 
                 exercise=item.exercise
-            ).order_by('-created_at').first()
+            ).select_related('session').order_by('-created_at').first()
 
             if last_log:
                 # Get ALL the sets from that previous session
@@ -198,7 +199,11 @@ class StartTemplateView(APIView):
                     weight=0.0
                 )
 
+            if logs_to_create:
+                WorkoutLog.objects.bulk_create(logs_to_create)
+
         # Return the newly created session with all its populated logs to React
+        session_with_logs = WorkoutSessison.objects.prefetch_related('logs__exercise').get(id=session.id)
         serializer = WorkoutSessionSerializer(session)
         return Response(serializer.data, status=201)
     
@@ -209,16 +214,18 @@ class MuscleHeatMapView(APIView):
     def get(self, request):
         thirty_days_ago = timezone.now() - timedelta(days=30)
         
-        logs = WorkoutLog.objects.filter(
-            session__user=request.user,
-            created_at__gte=thirty_days_ago
-        )
         
-        muscle_counts = logs.values('exercise__target_muscle').annotate(set_count=Count('id'))
+        muscle_counts = WorkoutLog.objects.filter(
+            session__user = request.user,
+            created_at__gte = thirty_days_ago
+        ).values('exercise__targer_muscle').annotate(set_count=Count('id'))
         
         heatmap_data = {}
         for item in muscle_counts:
             muscle_string = item['exercise__target_muscle'].lower()
+            if not muscle_string:
+                continue
+            
             count = item['set_count']
             
             for m in [x.strip() for x in muscle_string.split(',')]:
@@ -299,7 +306,7 @@ class DailyFoodLogListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         date_str = self.request.query_params.get('date', str(date.today()))
-        return DailyFoodLog.objects.filter(user=self.request.user, date=date_str).order_by('-created_at')
+        return DailyFoodLog.objects.filter(user=self.request.user, date=date_str).select_related('user', 'custom_meal').order_by('-created_at')
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)

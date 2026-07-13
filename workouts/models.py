@@ -23,7 +23,7 @@ class WorkoutSessison(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sessions', null=True)
     name = models.CharField(max_length=100)
-    date = models.DateField(auto_now_add=True)
+    date = models.DateField(auto_now_add=True, db_index=True)
     
     def __str__(self):
         return f"{self.name} - {self.date}"
@@ -36,7 +36,7 @@ class WorkoutLog(models.Model):
     set_number = models.PositiveIntegerField()
     reps = models.PositiveIntegerField()
     weight = models.FloatField()
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     
     def __str__(self):
         return f"{self.exercise.name} - Set {self.set_number}"
@@ -162,7 +162,7 @@ class CustomMeal(models.Model):
 class DailyFoodLog(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='food_logs')
-    date = models.DateField(default=date.today)
+    date = models.DateField(default=date.today, db_index=True)
 
     # add meal without saving or choose from saved meal
     meal_name = models.CharField(max_length=300)
