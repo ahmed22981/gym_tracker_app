@@ -215,18 +215,19 @@ class MuscleHeatMapView(APIView):
     def get(self, request):
         thirty_days_ago = timezone.now() - timedelta(days=30)
         
-        
         muscle_counts = WorkoutLog.objects.filter(
             session__user = request.user,
             created_at__gte = thirty_days_ago
-        ).values('exercise__targer_muscle').annotate(set_count=Count('id'))
+        ).values('exercise__target_muscle').annotate(set_count=Count('id'))
         
         heatmap_data = {}
         for item in muscle_counts:
-            muscle_string = item['exercise__target_muscle'].lower()
-            if not muscle_string:
+            raw_muscle = item.get('exercise__target_muscle')
+            
+            if not raw_muscle:
                 continue
 
+            muscle_string = raw_muscle.lower()
             count = item['set_count']
             
             for m in [x.strip() for x in muscle_string.split(',')]:
