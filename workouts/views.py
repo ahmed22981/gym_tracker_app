@@ -184,7 +184,7 @@ class StartTemplateView(APIView):
                 # Clone them into the new session!
                 for old_log in old_logs:
                     logs_to_create.append(WorkoutLog(
-                        id=uuid.uuid4,
+                        id=uuid.uuid4(),
                         session=session,
                         exercise=item.exercise,
                         set_number=old_log.set_number,
@@ -194,7 +194,7 @@ class StartTemplateView(APIView):
             else:
                 # If they have NEVER done this exercise before, just create 1 empty set
                 logs_to_create.append(WorkoutLog(
-                    id=uuid.uuid4,
+                    id=uuid.uuid4(),
                     session=session,
                     exercise=item.exercise,
                     set_number=1,
