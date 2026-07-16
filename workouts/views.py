@@ -163,7 +163,7 @@ class StartTemplateView(APIView):
             name=template.name
         )
 
-        # 2. Loop through all exercises saved in this template
+       # 2. Loop through all exercises saved in this template
         items = template.items.select_related('exercise').order_by('order')
         logs_to_create = []
 
@@ -184,7 +184,6 @@ class StartTemplateView(APIView):
                 # Clone them into the new session!
                 for old_log in old_logs:
                     logs_to_create.append(WorkoutLog(
-                        id=uuid.uuid4(),
                         session=session,
                         exercise=item.exercise,
                         set_number=old_log.set_number,
@@ -194,7 +193,6 @@ class StartTemplateView(APIView):
             else:
                 # If they have NEVER done this exercise before, just create 1 empty set
                 logs_to_create.append(WorkoutLog(
-                    id=uuid.uuid4(),
                     session=session,
                     exercise=item.exercise,
                     set_number=1,
@@ -202,8 +200,8 @@ class StartTemplateView(APIView):
                     weight=0.0
                 ))
 
-            if logs_to_create:
-                WorkoutLog.objects.bulk_create(logs_to_create)
+        if logs_to_create:
+            WorkoutLog.objects.bulk_create(logs_to_create)
 
         # Return the newly created session with all its populated logs to React
         session_with_logs = WorkoutSessison.objects.prefetch_related('logs__exercise').get(id=session.id)
